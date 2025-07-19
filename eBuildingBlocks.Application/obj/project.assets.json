@@ -635,7 +635,7 @@
           }
         }
       },
-      "eBuildingBlocks.Common/1.0.2": {
+      "eBuildingBlocks.Common/1.0.3": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "compile": {
@@ -645,11 +645,11 @@
           "bin/placeholder/eBuildingBlocks.Common.dll": {}
         }
       },
-      "eBuildingBlocks.Domain/1.0.2": {
+      "eBuildingBlocks.Domain/1.0.3": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
-          "eBuildingBlocks.Common": "1.0.2"
+          "eBuildingBlocks.Common": "1.0.3"
         },
         "compile": {
           "bin/placeholder/eBuildingBlocks.Domain.dll": {}
@@ -1544,12 +1544,12 @@
         "version.txt"
       ]
     },
-    "eBuildingBlocks.Common/1.0.2": {
+    "eBuildingBlocks.Common/1.0.3": {
       "type": "project",
       "path": "../eBuildingBlocks.Common/eBuildingBlocks.Common.csproj",
       "msbuildProject": "../eBuildingBlocks.Common/eBuildingBlocks.Common.csproj"
     },
-    "eBuildingBlocks.Domain/1.0.2": {
+    "eBuildingBlocks.Domain/1.0.3": {
       "type": "project",
       "path": "../eBuildingBlocks.Domain/eBuildingBlocks.Domain.csproj",
       "msbuildProject": "../eBuildingBlocks.Domain/eBuildingBlocks.Domain.csproj"
@@ -1570,7 +1570,7 @@
       "Swashbuckle.AspNetCore.Annotations >= 8.1.1",
       "Swashbuckle.AspNetCore.Filters >= 8.0.2",
       "System.IdentityModel.Tokens.Jwt >= 8.9.0",
-      "eBuildingBlocks.Domain >= 1.0.2"
+      "eBuildingBlocks.Domain >= 1.0.3"
     ]
   },
   "packageFolders": {
@@ -1579,7 +1579,7 @@
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder": {}
   },
   "project": {
-    "version": "1.0.2",
+    "version": "1.0.3",
     "restore": {
       "projectUniqueName": "D:\\Projects\\Local\\github public\\eBuildingBlocks\\eBuildingBlocks.Application\\eBuildingBlocks.Application.csproj",
       "projectName": "eBuildingBlocks.Application",
