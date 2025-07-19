@@ -24,21 +24,18 @@ eBuildingBlocks/
 
 ### 1. **Domain Layer** (`eBuildingBlocks.Domain`)
 - **Entity Framework**: Base entity classes with audit trail support
-- **Repository Pattern**: Generic repository interface with specification pattern
+- **Repository Pattern**: Generic repository interface
 - **Multi-tenancy**: Built-in tenant isolation support
 - **Audit Logging**: Automatic audit trail for all entity changes
-- **Specification Pattern**: Flexible query specifications for complex data access
 
 #### Key Components:
 - `BaseEntity`: Abstract base class with audit fields (CreatedAt, UpdatedAt, IsDeleted, etc.)
 - `Entity<TKey>`: Generic entity interface with tenant support
 - `IRepository<TEntity, TKey>`: Generic repository interface
 - `ICurrentUser`: Interface for current user context
-- `Specification<TEntity>`: Query specification pattern implementation
 - `AuditLog`: Comprehensive audit logging model
 
 ### 2. **Application Layer** (`eBuildingBlocks.Application`)
-- **CQRS Support**: MediatR integration for command/query separation
 - **Validation**: FluentValidation integration
 - **Exception Handling**: Global exception handler with standardized error responses
 - **Response Models**: Standardized API response patterns
@@ -54,7 +51,7 @@ eBuildingBlocks/
 
 ### 3. **Infrastructure Layer** (`eBuildingBlocks.Infrastructure`)
 - **Entity Framework Core**: Database context with audit interceptor
-- **Repository Implementation**: Generic repository with specification support
+- **Repository Implementation**: Generic repository implementation
 - **Audit Interceptor**: Automatic audit logging for all database changes
 - **Multi-tenancy**: Global tenant filtering
 - **Dapper Integration**: Raw SQL support for complex queries
@@ -111,10 +108,7 @@ eBuildingBlocks/
 - IP address and user tracking
 - JSON serialization of changes
 
-### **Specification Pattern**
-- Flexible query specifications
-- Support for complex filtering, ordering, and paging
-- Reusable query components
+
 
 ### **Global Exception Handling**
 - Standardized error responses
@@ -139,7 +133,6 @@ eBuildingBlocks/
 ### **Core Dependencies**
 - **.NET 9.0**: Latest .NET framework
 - **Entity Framework Core**: ORM and data access
-- **MediatR**: CQRS pattern implementation
 - **FluentValidation**: Input validation
 - **AutoMapper**: Object mapping
 - **MassTransit**: Message bus implementation
@@ -218,26 +211,14 @@ public class UserService
         return await _userRepository.GetByIdAsync(id);
     }
     
-    public async Task<(int TotalCount, IReadOnlyList<User> Data)> GetUsersAsync(
-        int page, int pageSize)
-    {
-        var spec = new UserSpecification(page, pageSize);
-        return await _userRepository.ListAsync(spec);
-    }
+         public async Task<IReadOnlyList<User>> GetUsersAsync()
+     {
+         return await _userRepository.GetAllAsync();
+     }
 }
 ```
 
-### **Specification Pattern**
-```csharp
-public class UserSpecification : Specification<User>
-{
-    public UserSpecification(int page, int pageSize)
-    {
-        AddPaging(pageSize, page);
-        AddOrderBy(x => x.CreatedAt, OrderType.Descending);
-    }
-}
-```
+
 
 ### **Event Publishing**
 ```csharp
@@ -303,16 +284,14 @@ The framework is designed to be easily testable with:
 - Dependency injection support
 - Interface-based abstractions
 - Mockable repositories and services
-- Specification pattern for testable queries
 
 ## 🤝 Contributing
 
 ### **Extension Points**
-1. **Custom Specifications**: Extend `Specification<TEntity>` for domain-specific queries
-2. **Custom Repositories**: Implement `IRepository<TEntity, TKey>` for specialized data access
-3. **Custom Events**: Extend `IntegrationEvent` for domain events
-4. **Custom Middleware**: Extend existing middleware or create new ones
-5. **Custom Validators**: Use FluentValidation for custom validation rules
+1. **Custom Repositories**: Implement `IRepository<TEntity, TKey>` for specialized data access
+2. **Custom Events**: Extend `IntegrationEvent` for domain events
+3. **Custom Middleware**: Extend existing middleware or create new ones
+4. **Custom Validators**: Use FluentValidation for custom validation rules
 
 ### **Guidelines**
 - Follow the existing naming conventions
@@ -333,6 +312,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - Clean Architecture principles by Robert C. Martin
 - Domain-Driven Design concepts by Eric Evans
-- CQRS pattern implementation with MediatR
 - MassTransit for message bus implementation
 - Entity Framework Core for data access 
