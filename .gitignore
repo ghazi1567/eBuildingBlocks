@@ -1,0 +1,60 @@
+# Build results
+/bin/
+/obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio files
+.vscode/
+.vs/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Publish folder
+/publish/
+/out/
+
+# Configuration files
+appsettings.Development.json
+appsettings.*.json
+
+# Logs
+*.log
+
+# Database files
+*.mdf
+*.ldf
+
+# npm packages (if using frontend inside project)
+node_modules/
+
+# Environment files
+.env
+
+# JetBrains Rider
+.idea/
+
+# Backup & temporary files
+*.bak
+*.tmp
+
+# Docker
+**/docker-compose.override.yml
+
+# Secrets
+secrets.json
+
+# Coverage Reports
+coverage/
+
+# Resharper
+_ReSharper*/
+*.DotSettings.user
+
+# Optional: ignore generated migration snapshots
+Migrations/*Snapshot.cs

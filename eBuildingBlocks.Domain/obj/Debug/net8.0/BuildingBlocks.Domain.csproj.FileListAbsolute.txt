@@ -1,0 +1,12 @@
+D:\Projects\Nestosh\rsof\Insync\SSO\SampleProject\BuildingBlocks\BuildingBlocks.Domain\bin\Debug\net8.0\BuildingBlocks.Domain.deps.json
+D:\Projects\Nestosh\rsof\Insync\SSO\SampleProject\BuildingBlocks\BuildingBlocks.Domain\bin\Debug\net8.0\BuildingBlocks.Domain.dll
+D:\Projects\Nestosh\rsof\Insync\SSO\SampleProject\BuildingBlocks\BuildingBlocks.Domain\bin\Debug\net8.0\BuildingBlocks.Domain.pdb
+D:\Projects\Nestosh\rsof\Insync\SSO\SampleProject\BuildingBlocks\BuildingBlocks.Domain\obj\Debug\net8.0\BuildingBlocks.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\Projects\Nestosh\rsof\Insync\SSO\SampleProject\BuildingBlocks\BuildingBlocks.Domain\obj\Debug\net8.0\BuildingBlocks.Domain.AssemblyInfoInputs.cache
+D:\Projects\Nestosh\rsof\Insync\SSO\SampleProject\BuildingBlocks\BuildingBlocks.Domain\obj\Debug\net8.0\BuildingBlocks.Domain.AssemblyInfo.cs
+D:\Projects\Nestosh\rsof\Insync\SSO\SampleProject\BuildingBlocks\BuildingBlocks.Domain\obj\Debug\net8.0\BuildingBlocks.Domain.csproj.CoreCompileInputs.cache
+D:\Projects\Nestosh\rsof\Insync\SSO\SampleProject\BuildingBlocks\BuildingBlocks.Domain\obj\Debug\net8.0\BuildingBlocks.Domain.sourcelink.json
+D:\Projects\Nestosh\rsof\Insync\SSO\SampleProject\BuildingBlocks\BuildingBlocks.Domain\obj\Debug\net8.0\BuildingBlocks.Domain.dll
+D:\Projects\Nestosh\rsof\Insync\SSO\SampleProject\BuildingBlocks\BuildingBlocks.Domain\obj\Debug\net8.0\refint\BuildingBlocks.Domain.dll
+D:\Projects\Nestosh\rsof\Insync\SSO\SampleProject\BuildingBlocks\BuildingBlocks.Domain\obj\Debug\net8.0\BuildingBlocks.Domain.pdb
+D:\Projects\Nestosh\rsof\Insync\SSO\SampleProject\BuildingBlocks\BuildingBlocks.Domain\obj\Debug\net8.0\ref\BuildingBlocks.Domain.dll

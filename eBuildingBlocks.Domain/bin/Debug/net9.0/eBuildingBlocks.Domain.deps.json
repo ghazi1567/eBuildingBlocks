@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "eBuildingBlocks.Domain/1.0.0": {
+        "dependencies": {
+          "eBuildingBlocks.Common": "1.0.0"
+        },
+        "runtime": {
+          "eBuildingBlocks.Domain.dll": {}
+        }
+      },
+      "eBuildingBlocks.Common/1.0.0": {
+        "runtime": {
+          "eBuildingBlocks.Common.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "eBuildingBlocks.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "eBuildingBlocks.Common/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
