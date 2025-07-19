@@ -18,7 +18,7 @@ jobs:
           dotnet-version: '9.0.x' # or your required version
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore eBuildingBlocks.sln
 
       - name: Pack all projects
         run: |
