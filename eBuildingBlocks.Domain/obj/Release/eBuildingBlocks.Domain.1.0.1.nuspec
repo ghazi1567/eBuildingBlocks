@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>eBuildingBlocks.Domain</id>
+    <version>1.0.1</version>
+    <title>eBuildingBlocks Domain</title>
+    <authors>Inam Ul Haq</authors>
+    <readme>README.md</readme>
+    <description>Reusable building block for the  ecosystem. Implements core cross-cutting concerns, infrastructure, or domain utilities for .NET applications.</description>
+    <copyright>Copyright © linkedin/in/inam1567. All rights reserved.</copyright>
+    <repository type="git" url="https://github.com/ghazi1567/eBuildingBlocks" commit="d1463ba9da13571f7f49a3bcb4918bbfad47d395" />
+    <dependencies>
+      <group targetFramework="net9.0">
+        <dependency id="eBuildingBlocks.Common" version="1.0.1" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\bin\Release\net9.0\eBuildingBlocks.Domain.dll" target="lib\net9.0\eBuildingBlocks.Domain.dll" />
+    <file src="D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\README.md" target="README.md" />
+  </files>
+</package>

@@ -8,9 +8,9 @@ D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Debug
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Debug\net9.0\eBuildingBlocks.Domain.AssemblyInfoInputs.cache
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Debug\net9.0\eBuildingBlocks.Domain.AssemblyInfo.cs
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Debug\net9.0\eBuildingBlocks.Domain.csproj.CoreCompileInputs.cache
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Debug\net9.0\eBuildingBlocks.Domain.sourcelink.json
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Debug\net9.0\eBuildin.FB5BABE6.Up2Date
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Debug\net9.0\eBuildingBlocks.Domain.dll
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Debug\net9.0\refint\eBuildingBlocks.Domain.dll
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Debug\net9.0\eBuildingBlocks.Domain.pdb
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Debug\net9.0\ref\eBuildingBlocks.Domain.dll
-D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Debug\net9.0\eBuildingBlocks.Domain.sourcelink.json

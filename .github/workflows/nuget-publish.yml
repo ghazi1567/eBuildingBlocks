@@ -3,10 +3,10 @@ name: Publish NuGet Packages
 on:
   push:
     tags:
-      - 'v*.*.*' # Trigger only on version tags, e.g. v1.2.3
+      - 'v*.*.*'
 
 jobs:
-  pack-and-publish:
+  build-and-publish:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,19 +15,16 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x' # or your required version
+          dotnet-version: '8.0.x' # or your required version
 
       - name: Restore dependencies
         run: dotnet restore eBuildingBlocks.sln
 
-      - name: Pack all projects
-        run: |
-          for proj in $(find ./eBuildingBlocks -name '*.csproj'); do
-            dotnet pack "$proj" --configuration Release --output ./nupkgs
-          done
+      - name: Build all projects (creates .nupkg in bin/Release)
+        run: dotnet build eBuildingBlocks.sln --configuration Release
 
-      - name: Publish to NuGet.org
+      - name: Publish all .nupkg files from bin/Release to NuGet.org
         run: |
-          for pkg in ./nupkgs/*.nupkg; do
+          find ./eBuildingBlocks -type f -name '*.nupkg' -path '*/bin/Release/*' | while read pkg; do
             dotnet nuget push "$pkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
           done

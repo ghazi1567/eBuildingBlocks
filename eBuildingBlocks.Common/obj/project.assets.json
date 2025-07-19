@@ -13,7 +13,7 @@
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder": {}
   },
   "project": {
-    "version": "1.0.1",
+    "version": "1.0.2",
     "restore": {
       "projectUniqueName": "D:\\Projects\\Local\\github public\\eBuildingBlocks\\eBuildingBlocks.Common\\eBuildingBlocks.Common.csproj",
       "projectName": "eBuildingBlocks.Common",

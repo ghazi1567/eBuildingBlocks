@@ -1,0 +1,12 @@
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Common\bin\Release\net9.0\eBuildingBlocks.Common.deps.json
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Common\bin\Release\net9.0\eBuildingBlocks.Common.dll
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Common\bin\Release\net9.0\eBuildingBlocks.Common.pdb
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Common\obj\Release\net9.0\eBuildingBlocks.Common.GeneratedMSBuildEditorConfig.editorconfig
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Common\obj\Release\net9.0\eBuildingBlocks.Common.AssemblyInfoInputs.cache
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Common\obj\Release\net9.0\eBuildingBlocks.Common.AssemblyInfo.cs
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Common\obj\Release\net9.0\eBuildingBlocks.Common.csproj.CoreCompileInputs.cache
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Common\obj\Release\net9.0\eBuildingBlocks.Common.sourcelink.json
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Common\obj\Release\net9.0\eBuildingBlocks.Common.dll
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Common\obj\Release\net9.0\refint\eBuildingBlocks.Common.dll
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Common\obj\Release\net9.0\eBuildingBlocks.Common.pdb
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Common\obj\Release\net9.0\ref\eBuildingBlocks.Common.dll

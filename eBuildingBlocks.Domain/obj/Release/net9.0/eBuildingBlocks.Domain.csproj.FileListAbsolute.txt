@@ -1,0 +1,16 @@
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\bin\Release\net9.0\eBuildingBlocks.Domain.deps.json
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\bin\Release\net9.0\eBuildingBlocks.Domain.dll
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\bin\Release\net9.0\eBuildingBlocks.Domain.pdb
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\bin\Release\net9.0\eBuildingBlocks.Common.dll
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\bin\Release\net9.0\eBuildingBlocks.Common.pdb
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Release\net9.0\eBuildingBlocks.Domain.csproj.AssemblyReference.cache
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Release\net9.0\eBuildingBlocks.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Release\net9.0\eBuildingBlocks.Domain.AssemblyInfoInputs.cache
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Release\net9.0\eBuildingBlocks.Domain.AssemblyInfo.cs
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Release\net9.0\eBuildingBlocks.Domain.csproj.CoreCompileInputs.cache
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Release\net9.0\eBuildingBlocks.Domain.sourcelink.json
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Release\net9.0\eBuildin.FB5BABE6.Up2Date
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Release\net9.0\eBuildingBlocks.Domain.dll
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Release\net9.0\refint\eBuildingBlocks.Domain.dll
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Release\net9.0\eBuildingBlocks.Domain.pdb
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Release\net9.0\ref\eBuildingBlocks.Domain.dll

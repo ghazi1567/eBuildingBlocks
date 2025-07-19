@@ -2,7 +2,7 @@
   "version": 3,
   "targets": {
     "net9.0": {
-      "eBuildingBlocks.Common/1.0.1": {
+      "eBuildingBlocks.Common/1.0.2": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "compile": {
@@ -15,7 +15,7 @@
     }
   },
   "libraries": {
-    "eBuildingBlocks.Common/1.0.1": {
+    "eBuildingBlocks.Common/1.0.2": {
       "type": "project",
       "path": "../eBuildingBlocks.Common/eBuildingBlocks.Common.csproj",
       "msbuildProject": "../eBuildingBlocks.Common/eBuildingBlocks.Common.csproj"
@@ -23,7 +23,7 @@
   },
   "projectFileDependencyGroups": {
     "net9.0": [
-      "eBuildingBlocks.Common >= 1.0.1"
+      "eBuildingBlocks.Common >= 1.0.2"
     ]
   },
   "packageFolders": {
@@ -32,7 +32,7 @@
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder": {}
   },
   "project": {
-    "version": "1.0.1",
+    "version": "1.0.2",
     "restore": {
       "projectUniqueName": "D:\\Projects\\Local\\github public\\eBuildingBlocks\\eBuildingBlocks.Domain\\eBuildingBlocks.Domain.csproj",
       "projectName": "eBuildingBlocks.Domain",
