@@ -1,10 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFramework>net9.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-	</PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>eBuildingBlocks Application</Title>
+    <Authors>Inam Ul Haq</Authors>
+    <Company>https://www.linkedin.com/in/inam1567/</Company>
+    <Product>eBuildingBlocks Application</Product>
+    <Description>Reusable building block for the  ecosystem. Implements core cross-cutting concerns, infrastructure, or domain utilities for .NET applications.</Description>
+    <Copyright>Copyright © linkedin/in/inam1567. All rights reserved.</Copyright>
+    <RepositoryUrl>https://github.com/ghazi1567/eBuildingBlocks</RepositoryUrl>
+  </PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="14.0.0" />
