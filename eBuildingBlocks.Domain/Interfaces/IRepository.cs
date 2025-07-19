@@ -1,5 +1,4 @@
 ﻿using eBuildingBlocks.Domain.Models;
-using eBuildingBlocks.Domain.SpecificationConfig;
 using System.Linq.Expressions;
 
 namespace eBuildingBlocks.Domain.Interfaces;

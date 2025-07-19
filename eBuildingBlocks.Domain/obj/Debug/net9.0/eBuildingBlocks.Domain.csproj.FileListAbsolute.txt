@@ -13,3 +13,4 @@ D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Debug
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Debug\net9.0\refint\eBuildingBlocks.Domain.dll
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Debug\net9.0\eBuildingBlocks.Domain.pdb
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Debug\net9.0\ref\eBuildingBlocks.Domain.dll
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Domain\obj\Debug\net9.0\eBuildingBlocks.Domain.sourcelink.json

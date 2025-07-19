@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>eBuildingBlocks.EventBus</id>
+    <version>1.0.0</version>
+    <title>eBuildingBlocks EventBus</title>
+    <authors>Inam Ul Haq</authors>
+    <description>Reusable building block for the  ecosystem. Implements core cross-cutting concerns, infrastructure, or domain utilities for .NET applications.</description>
+    <copyright>Copyright © linkedin/in/inam1567. All rights reserved.</copyright>
+    <repository type="git" url="https://github.com/ghazi1567/eBuildingBlocks" commit="c8278a698a0f44abbf4e67012b7c4ed2aa2656e8" />
+    <dependencies>
+      <group targetFramework="net9.0">
+        <dependency id="MassTransit" version="8.5.1" exclude="Build,Analyzers" />
+        <dependency id="MassTransit.AspNetCore" version="7.3.1" exclude="Build,Analyzers" />
+        <dependency id="MassTransit.RabbitMQ" version="8.5.1" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.EventBus\bin\Debug\net9.0\eBuildingBlocks.EventBus.dll" target="lib\net9.0\eBuildingBlocks.EventBus.dll" />
+  </files>
+</package>

@@ -19,3 +19,4 @@ D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.API\obj\Debug\ne
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.API\obj\Debug\net9.0\refint\eBuildingBlocks.API.dll
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.API\obj\Debug\net9.0\eBuildingBlocks.API.pdb
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.API\obj\Debug\net9.0\ref\eBuildingBlocks.API.dll
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.API\obj\Debug\net9.0\eBuildingBlocks.API.sourcelink.json

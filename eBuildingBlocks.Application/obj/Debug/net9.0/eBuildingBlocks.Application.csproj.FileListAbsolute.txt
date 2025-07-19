@@ -15,3 +15,4 @@ D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Application\obj\
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Application\obj\Debug\net9.0\refint\eBuildingBlocks.Application.dll
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Application\obj\Debug\net9.0\eBuildingBlocks.Application.pdb
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Application\obj\Debug\net9.0\ref\eBuildingBlocks.Application.dll
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Application\obj\Debug\net9.0\eBuildingBlocks.Application.sourcelink.json

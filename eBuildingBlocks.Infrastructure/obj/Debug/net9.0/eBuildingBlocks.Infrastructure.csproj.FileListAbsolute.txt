@@ -17,3 +17,4 @@ D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Infrastructure\o
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Infrastructure\obj\Debug\net9.0\eBuildingBlocks.Infrastructure.pdb
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Infrastructure\obj\Debug\net9.0\eBuildingBlocks.Infrastructure.genruntimeconfig.cache
 D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Infrastructure\obj\Debug\net9.0\ref\eBuildingBlocks.Infrastructure.dll
+D:\Projects\Local\github public\eBuildingBlocks\eBuildingBlocks.Infrastructure\obj\Debug\net9.0\eBuildingBlocks.Infrastructure.sourcelink.json

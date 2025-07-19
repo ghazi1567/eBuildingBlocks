@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "w/plXt9zBoM=",
+  "dgSpecHash": "C6ZTRZ5NMUQ=",
   "success": true,
-  "projectFilePath": "D:\\Projects\\Nestosh\\NPMS\\NPMSConnect\\src\\BuildingBlocks\\BuildingBlocks.EventBus\\BuildingBlocks.EventBus.csproj",
+  "projectFilePath": "D:\\Projects\\Local\\github public\\eBuildingBlocks\\eBuildingBlocks.EventBus\\eBuildingBlocks.EventBus.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\inamu\\.nuget\\packages\\masstransit\\8.5.1\\masstransit.8.5.1.nupkg.sha512",
     "C:\\Users\\inamu\\.nuget\\packages\\masstransit.abstractions\\8.5.1\\masstransit.abstractions.8.5.1.nupkg.sha512",
