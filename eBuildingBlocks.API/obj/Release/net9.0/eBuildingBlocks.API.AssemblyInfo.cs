@@ -17,7 +17,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Reusable building block for the  ecosystem. Implements core cross-cutting concern" +
     "s, infrastructure, or domain utilities for .NET applications.")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+816d45bfc8a355ad74327c15408682e7fd5ee99d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+18f1736670698c2a6ee21a9975c1bfcbe8f73596")]
 [assembly: System.Reflection.AssemblyProductAttribute("eBuildingBlocks API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("eBuildingBlocks.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
