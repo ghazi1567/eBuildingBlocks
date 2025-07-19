@@ -3,7 +3,7 @@ using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace eBuildingBlocks.API.Configs;
+namespace eBuildingBlocks.API.Startup;
 
 public class AddAcceptLanguageHeaderParameter : IOperationFilter
 {

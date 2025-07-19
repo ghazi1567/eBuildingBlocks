@@ -1,4 +1,4 @@
-﻿namespace BuildingBlocks.API.Configs;
+﻿namespace BuildingBlocks.API.Startup;
 
 public static class CaptchaSettings
 {

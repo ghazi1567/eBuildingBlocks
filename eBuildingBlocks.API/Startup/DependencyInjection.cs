@@ -13,7 +13,7 @@ using System.Text.Json.Serialization;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-namespace BuildingBlocks.API.Configs;
+namespace BuildingBlocks.API.Startup;
 
 public static class DependencyInjection
 {

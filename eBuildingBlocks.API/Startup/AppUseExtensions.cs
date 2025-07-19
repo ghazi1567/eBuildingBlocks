@@ -13,7 +13,7 @@ using Prometheus;
 using System.Net.Http.Headers;
 using System.Text;
 
-namespace BuildingBlocks.API.Configs;
+namespace BuildingBlocks.API.Startup;
 
 public static class AppUseExtensions
 {

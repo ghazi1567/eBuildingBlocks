@@ -5,7 +5,7 @@
   },
   "projects": {
     "D:\\Projects\\Local\\github public\\eBuildingBlocks\\eBuildingBlocks.Common\\eBuildingBlocks.Common.csproj": {
-      "version": "1.0.0",
+      "version": "1.0.1",
       "restore": {
         "projectUniqueName": "D:\\Projects\\Local\\github public\\eBuildingBlocks\\eBuildingBlocks.Common\\eBuildingBlocks.Common.csproj",
         "projectName": "eBuildingBlocks.Common",
@@ -72,7 +72,7 @@
       }
     },
     "D:\\Projects\\Local\\github public\\eBuildingBlocks\\eBuildingBlocks.Domain\\eBuildingBlocks.Domain.csproj": {
-      "version": "1.0.0",
+      "version": "1.0.1",
       "restore": {
         "projectUniqueName": "D:\\Projects\\Local\\github public\\eBuildingBlocks\\eBuildingBlocks.Domain\\eBuildingBlocks.Domain.csproj",
         "projectName": "eBuildingBlocks.Domain",
@@ -143,7 +143,7 @@
       }
     },
     "D:\\Projects\\Local\\github public\\eBuildingBlocks\\eBuildingBlocks.Infrastructure\\eBuildingBlocks.Infrastructure.csproj": {
-      "version": "1.0.0",
+      "version": "1.0.1",
       "restore": {
         "projectUniqueName": "D:\\Projects\\Local\\github public\\eBuildingBlocks\\eBuildingBlocks.Infrastructure\\eBuildingBlocks.Infrastructure.csproj",
         "projectName": "eBuildingBlocks.Infrastructure",
