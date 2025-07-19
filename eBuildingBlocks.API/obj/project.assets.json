@@ -2528,7 +2528,7 @@
           }
         }
       },
-      "eBuildingBlocks.Application/1.0.3": {
+      "eBuildingBlocks.Application/1.0.4": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
@@ -2545,7 +2545,7 @@
           "Swashbuckle.AspNetCore.Annotations": "8.1.1",
           "Swashbuckle.AspNetCore.Filters": "8.0.2",
           "System.IdentityModel.Tokens.Jwt": "8.9.0",
-          "eBuildingBlocks.Domain": "1.0.3"
+          "eBuildingBlocks.Domain": "1.0.4"
         },
         "compile": {
           "bin/placeholder/eBuildingBlocks.Application.dll": {}
@@ -2554,7 +2554,7 @@
           "bin/placeholder/eBuildingBlocks.Application.dll": {}
         }
       },
-      "eBuildingBlocks.Common/1.0.3": {
+      "eBuildingBlocks.Common/1.0.4": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "compile": {
@@ -2564,11 +2564,11 @@
           "bin/placeholder/eBuildingBlocks.Common.dll": {}
         }
       },
-      "eBuildingBlocks.Domain/1.0.3": {
+      "eBuildingBlocks.Domain/1.0.4": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
-          "eBuildingBlocks.Common": "1.0.3"
+          "eBuildingBlocks.Common": "1.0.4"
         },
         "compile": {
           "bin/placeholder/eBuildingBlocks.Domain.dll": {}
@@ -2577,7 +2577,7 @@
           "bin/placeholder/eBuildingBlocks.Domain.dll": {}
         }
       },
-      "eBuildingBlocks.Infrastructure/1.0.3": {
+      "eBuildingBlocks.Infrastructure/1.0.4": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
@@ -2586,7 +2586,7 @@
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "9.0.4",
           "Microsoft.EntityFrameworkCore.SqlServer": "9.0.4",
           "RabbitMQ.Client": "7.1.2",
-          "eBuildingBlocks.Domain": "1.0.3"
+          "eBuildingBlocks.Domain": "1.0.4"
         },
         "compile": {
           "bin/placeholder/eBuildingBlocks.Infrastructure.dll": {}
@@ -6307,22 +6307,22 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "eBuildingBlocks.Application/1.0.3": {
+    "eBuildingBlocks.Application/1.0.4": {
       "type": "project",
       "path": "../eBuildingBlocks.Application/eBuildingBlocks.Application.csproj",
       "msbuildProject": "../eBuildingBlocks.Application/eBuildingBlocks.Application.csproj"
     },
-    "eBuildingBlocks.Common/1.0.3": {
+    "eBuildingBlocks.Common/1.0.4": {
       "type": "project",
       "path": "../eBuildingBlocks.Common/eBuildingBlocks.Common.csproj",
       "msbuildProject": "../eBuildingBlocks.Common/eBuildingBlocks.Common.csproj"
     },
-    "eBuildingBlocks.Domain/1.0.3": {
+    "eBuildingBlocks.Domain/1.0.4": {
       "type": "project",
       "path": "../eBuildingBlocks.Domain/eBuildingBlocks.Domain.csproj",
       "msbuildProject": "../eBuildingBlocks.Domain/eBuildingBlocks.Domain.csproj"
     },
-    "eBuildingBlocks.Infrastructure/1.0.3": {
+    "eBuildingBlocks.Infrastructure/1.0.4": {
       "type": "project",
       "path": "../eBuildingBlocks.Infrastructure/eBuildingBlocks.Infrastructure.csproj",
       "msbuildProject": "../eBuildingBlocks.Infrastructure/eBuildingBlocks.Infrastructure.csproj"
@@ -6350,8 +6350,8 @@
       "OpenTelemetry.Instrumentation.Http >= 1.12.0",
       "StackExchange.Redis >= 2.8.41",
       "Swashbuckle.AspNetCore >= 9.0.3",
-      "eBuildingBlocks.Application >= 1.0.3",
-      "eBuildingBlocks.Infrastructure >= 1.0.3",
+      "eBuildingBlocks.Application >= 1.0.4",
+      "eBuildingBlocks.Infrastructure >= 1.0.4",
       "prometheus-net.AspNetCore >= 8.2.1"
     ]
   },
@@ -6361,7 +6361,7 @@
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder": {}
   },
   "project": {
-    "version": "1.0.3",
+    "version": "1.0.4",
     "restore": {
       "projectUniqueName": "D:\\Projects\\Local\\github public\\eBuildingBlocks\\eBuildingBlocks.API\\eBuildingBlocks.API.csproj",
       "projectName": "eBuildingBlocks.API",

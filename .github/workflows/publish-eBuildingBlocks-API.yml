@@ -1,0 +1,32 @@
+name: Publish eBuildingBlocks.API
+
+on:
+  push:
+    paths:
+      - 'eBuildingBlocks.API/**'
+      - '.github/workflows/publish-eBuildingBlocks-API.yml'
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore ./eBuildingBlocks.API
+
+      - name: Build and create NuGet package
+        run: dotnet build ./eBuildingBlocks.API --configuration Release
+
+      - name: Publish NuGet package
+        run: |
+          find ./eBuildingBlocks.API/bin/Release -name '*.nupkg' | while read pkg; do
+            dotnet nuget push "$pkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          done

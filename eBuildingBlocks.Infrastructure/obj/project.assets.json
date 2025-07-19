@@ -2156,7 +2156,7 @@
           }
         }
       },
-      "eBuildingBlocks.Common/1.0.3": {
+      "eBuildingBlocks.Common/1.0.4": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "compile": {
@@ -2166,11 +2166,11 @@
           "bin/placeholder/eBuildingBlocks.Common.dll": {}
         }
       },
-      "eBuildingBlocks.Domain/1.0.3": {
+      "eBuildingBlocks.Domain/1.0.4": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
-          "eBuildingBlocks.Common": "1.0.3"
+          "eBuildingBlocks.Common": "1.0.4"
         },
         "compile": {
           "bin/placeholder/eBuildingBlocks.Domain.dll": {}
@@ -5871,12 +5871,12 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "eBuildingBlocks.Common/1.0.3": {
+    "eBuildingBlocks.Common/1.0.4": {
       "type": "project",
       "path": "../eBuildingBlocks.Common/eBuildingBlocks.Common.csproj",
       "msbuildProject": "../eBuildingBlocks.Common/eBuildingBlocks.Common.csproj"
     },
-    "eBuildingBlocks.Domain/1.0.3": {
+    "eBuildingBlocks.Domain/1.0.4": {
       "type": "project",
       "path": "../eBuildingBlocks.Domain/eBuildingBlocks.Domain.csproj",
       "msbuildProject": "../eBuildingBlocks.Domain/eBuildingBlocks.Domain.csproj"
@@ -5890,7 +5890,7 @@
       "Microsoft.EntityFrameworkCore.Design >= 9.0.4",
       "Microsoft.EntityFrameworkCore.SqlServer >= 9.0.4",
       "RabbitMQ.Client >= 7.1.2",
-      "eBuildingBlocks.Domain >= 1.0.3"
+      "eBuildingBlocks.Domain >= 1.0.4"
     ]
   },
   "packageFolders": {
@@ -5899,7 +5899,7 @@
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder": {}
   },
   "project": {
-    "version": "1.0.3",
+    "version": "1.0.4",
     "restore": {
       "projectUniqueName": "D:\\Projects\\Local\\github public\\eBuildingBlocks\\eBuildingBlocks.Infrastructure\\eBuildingBlocks.Infrastructure.csproj",
       "projectName": "eBuildingBlocks.Infrastructure",
