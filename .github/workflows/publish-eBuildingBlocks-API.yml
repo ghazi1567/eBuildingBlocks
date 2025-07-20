@@ -2,6 +2,8 @@ name: Publish eBuildingBlocks.API
 
 on:
   push:
+    branches:
+      - main
     paths:
       - 'eBuildingBlocks.API/**'
       - '.github/workflows/publish-eBuildingBlocks-API.yml'

@@ -20,7 +20,6 @@ public static class AppUseExtensions
     public static IApplicationBuilder BaseAppUse(this IApplicationBuilder app, IConfiguration configuration)
     {
         app
-            .UsingLocalization()
             .UsingCors()
             .UsingSwagger(configuration)
             .UsingHangfire()
@@ -87,24 +86,6 @@ public static class AppUseExtensions
     {
         app.UseAuthentication();
         app.UseAuthorization();
-
-        return app;
-    }
-
-    public static IApplicationBuilder UsingLocalization(this IApplicationBuilder app)
-    {
-        var supportedCultures = Enum
-            .GetValues(typeof(Languages))
-            .Cast<Languages>()
-            .Select(x => x.ToString())
-            .ToArray();
-
-        var localizationOptions = new RequestLocalizationOptions()
-            .SetDefaultCulture(supportedCultures[0])
-            .AddSupportedCultures(supportedCultures)
-            .AddSupportedUICultures(supportedCultures);
-
-        app.UseRequestLocalization(localizationOptions);
 
         return app;
     }

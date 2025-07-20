@@ -2,6 +2,8 @@ name: Publish eBuildingBlocks.Domain
 
 on:
   push:
+    branches:
+      - main
     paths:
       - 'eBuildingBlocks.Domain/**'
       - '.github/workflows/publish-eBuildingBlocks-Domain.yml'

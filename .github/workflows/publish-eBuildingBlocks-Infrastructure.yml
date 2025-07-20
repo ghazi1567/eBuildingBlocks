@@ -2,6 +2,8 @@ name: Publish eBuildingBlocks.Infrastructure
 
 on:
   push:
+    branches:
+      - main
     paths:
       - 'eBuildingBlocks.Infrastructure/**'
       - '.github/workflows/publish-eBuildingBlocks-Infrastructure.yml'

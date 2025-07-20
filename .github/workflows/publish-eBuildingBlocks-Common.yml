@@ -2,6 +2,8 @@ name: Publish eBuildingBlocks.Common
 
 on:
   push:
+    branches:
+      - main
     paths:
       - 'eBuildingBlocks.Common/**'
       - '.github/workflows/publish-eBuildingBlocks-Common.yml'

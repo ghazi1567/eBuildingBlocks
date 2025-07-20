@@ -15,7 +15,7 @@ using OpenTelemetry.Trace;
 
 namespace BuildingBlocks.API.Startup;
 
-public static class DependencyInjection
+public static class ServiceCollectionExtensions
 {
     public static IServiceCollection BaseRegister(this IServiceCollection services,
         IConfiguration configuration, IHostBuilder hostBuilder)
