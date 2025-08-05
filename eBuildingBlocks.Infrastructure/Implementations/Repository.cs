@@ -50,20 +50,20 @@ public class Repository<TEntity, TKey, TDbContext>(
 
     public async Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        if (entity is BaseEntity baseEntity)
+        // TODO: enable this for soft delete. soft deleted record clean up pending.
+        //if (entity is BaseEntity baseEntity)
+        //{
+        //    await Task.Run(() =>
+        //    {
+        //        Entities<TEntity>().Update(entity);
+        //    }, cancellationToken);
+        //}
+        
+
+        await Task.Run(() =>
         {
-            await Task.Run(() =>
-            {
-                Entities<TEntity>().Update(entity);
-            }, cancellationToken);
-        }
-        else
-        {
-            await Task.Run(() =>
-            {
-                Entities<TEntity>().Remove(entity);
-            }, cancellationToken);
-        }
+            Entities<TEntity>().Remove(entity);
+        }, cancellationToken);
     }
 
     public async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default)
