@@ -2,6 +2,10 @@
 
 public class ResponseModel<T> 
 {
+    public ResponseModel()
+    {
+        Success = true;
+    }
     public T? Data { get; private set; }
 
     public bool Success { get; set; }
@@ -23,6 +27,7 @@ public class ResponseModel<T>
     {
         Data = value;
         AddSuccessMessage(message);
+        Success = true;
         return this;
     }
 
@@ -55,7 +60,7 @@ public class ResponseModel<T>
         {
             AddErrorMessage(message);
         }
-
+        Success = false;
         return this;
     }
 
