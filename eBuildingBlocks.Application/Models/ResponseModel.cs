@@ -1,21 +1,9 @@
-﻿namespace eBuildingBlocks.Application.Features;
+﻿using System.Net;
 
-public class ResponseModel<T> 
+namespace eBuildingBlocks.Application.Features;
+public class ResponseModel<T> : ResponseModel
 {
-    public ResponseModel()
-    {
-        Success = true;
-    }
-    public T? Data { get; private set; }
-
-    public bool Success { get; set; }
-
-    public List<string> Errors { get; set; } = [];
-
-    public Dictionary<string, string[]> ValidationErrors { get; set; } = [];
-
-    public List<string> Successes { get; set; } = [];
-
+    public T? Data { get; set; }
 
     public ResponseModel<T> AddData(T value)
     {
@@ -23,6 +11,12 @@ public class ResponseModel<T>
         return this;
     }
 
+    /// <summary>
+    /// Add success message and set response data
+    /// </summary>
+    /// <param name="value">data to be return</param>
+    /// <param name="message"></param>
+    /// <returns></returns>
     public ResponseModel<T> AddSuccessMessage(T value, string message)
     {
         Data = value;
@@ -31,6 +25,12 @@ public class ResponseModel<T>
         return this;
     }
 
+    /// <summary>
+    /// add multiple success messages and set response data
+    /// </summary>
+    /// <param name="value"></param>
+    /// <param name="messages"></param>
+    /// <returns></returns>
     public ResponseModel<T> AddSuccessMessage(T value, List<string> messages)
     {
         Data = value;
@@ -41,24 +41,41 @@ public class ResponseModel<T>
 
         return this;
     }
+}
 
-    
-    public ResponseModel<T> AddSuccessMessage(List<string> messages)
+public class ResponseModel
+{
+
+
+    public HttpStatusCode HttpStatusCode { get; set; }
+    public bool Success { get; set; }
+
+    public List<string> Errors { get; set; } = [];
+
+    public Dictionary<string, string[]> ValidationErrors { get; set; } = [];
+
+    public List<string> Successes { get; set; } = [];
+
+
+
+    public ResponseModel AddSuccessMessage(List<string> messages)
     {
         foreach (string message in messages)
         {
             AddSuccessMessage(message);
+            HttpStatusCode = HttpStatusCode.OK;
         }
 
         return this;
     }
 
 
-    public ResponseModel<T> AddErrorMessage(List<string> messages)
+    public ResponseModel AddErrorMessage(List<string> messages)
     {
         foreach (string message in messages)
         {
             AddErrorMessage(message);
+            HttpStatusCode = HttpStatusCode.BadRequest;
         }
         Success = false;
         return this;
@@ -67,51 +84,57 @@ public class ResponseModel<T>
 
 
 
-    public ResponseModel<T> AddSuccessMessage(string message)
+    public ResponseModel AddSuccessMessage(string message)
     {
         if (!string.IsNullOrEmpty(message) && !Successes.Contains(message))
         {
             Successes.Add(message);
+            HttpStatusCode = HttpStatusCode.OK;
         }
         return this;
     }
-    
 
-  
-    public ResponseModel<T> AddErrorMessage(string message)
+
+
+    public ResponseModel AddErrorMessage(string message)
     {
         if (!string.IsNullOrEmpty(message) && !Errors.Contains(message))
         {
             Errors.Add(message);
+            HttpStatusCode = HttpStatusCode.BadRequest;
         }
         return this;
     }
-  
-    public ResponseModel<T>  AddValidationErrorMessages(Dictionary<string, string[]> errors)
+
+    public ResponseModel AddValidationErrorMessages(Dictionary<string, string[]> errors)
     {
         ValidationErrors = errors;
+        HttpStatusCode = HttpStatusCode.BadRequest;
         return this;
     }
-  
-    private ResponseModel<T>  Succeed(string message)
+
+    private ResponseModel Succeed(string message)
     {
         AddSuccessMessage(message);
         Success = true;
+        HttpStatusCode = HttpStatusCode.OK;
         return this;
     }
 
-    private ResponseModel<T>  Failed(string message)
+    private ResponseModel Failed(string message)
     {
         AddErrorMessage(message);
         Success = false;
+        HttpStatusCode = HttpStatusCode.BadRequest;
         return this;
     }
 
-    private ResponseModel<T>  ValidationFailed(string message, Dictionary<string, string[]> errors)
+    private ResponseModel ValidationFailed(string message, Dictionary<string, string[]> errors)
     {
         Success = false;
         Failed(message);
         AddValidationErrorMessages(errors);
+        HttpStatusCode = HttpStatusCode.BadRequest;
         return this;
     }
 }

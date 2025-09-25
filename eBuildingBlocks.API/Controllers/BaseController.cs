@@ -4,8 +4,15 @@ using Microsoft.AspNetCore.Mvc;
 namespace eBuildingBlocks.API.Controllers;
 
 [ApiController]
-[Route("[controller]/[action]")]
 public abstract class BaseController() : ControllerBase
 {
-  // TODO: Add base controller methods
+    // TODO: Add base controller methods
+    protected IActionResult ApiResult(ResponseModel result)
+    {
+        if (result.HttpStatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            return BadRequest(result);
+        }
+        return Ok(result);
+    }
 }
