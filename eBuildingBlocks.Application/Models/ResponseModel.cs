@@ -41,6 +41,58 @@ public class ResponseModel<T> : ResponseModel
 
         return this;
     }
+
+    public new ResponseModel<T> AddErrorMessage(string message)
+    {
+        if (!string.IsNullOrEmpty(message) && !Errors.Contains(message))
+        {
+            Errors.Add(message);
+            HttpStatusCode = HttpStatusCode.BadRequest;
+        }
+        return this;
+    }
+
+    public new ResponseModel<T> AddSuccessMessage(string message)
+    {
+        if (!string.IsNullOrEmpty(message) && !Successes.Contains(message))
+        {
+            Successes.Add(message);
+            HttpStatusCode = HttpStatusCode.OK;
+        }
+        return this;
+    }
+
+    public new ResponseModel<T> AddSuccessMessage(List<string> messages)
+    {
+        foreach (string message in messages)
+        {
+            AddSuccessMessage(message);
+            HttpStatusCode = HttpStatusCode.OK;
+        }
+
+        return this;
+    }
+
+
+    public new ResponseModel<T> AddErrorMessage(List<string> messages)
+    {
+        foreach (string message in messages)
+        {
+            AddErrorMessage(message);
+            HttpStatusCode = HttpStatusCode.BadRequest;
+        }
+        Success = false;
+        return this;
+    }
+
+    public new ResponseModel<T> ValidationFailed(string message, Dictionary<string, string[]> errors)
+    {
+        Success = false;
+        AddErrorMessage(message);
+        AddValidationErrorMessages(errors);
+        HttpStatusCode = HttpStatusCode.BadRequest;
+        return this;
+    }
 }
 
 public class ResponseModel
@@ -129,7 +181,7 @@ public class ResponseModel
         return this;
     }
 
-    private ResponseModel ValidationFailed(string message, Dictionary<string, string[]> errors)
+    public ResponseModel ValidationFailed(string message, Dictionary<string, string[]> errors)
     {
         Success = false;
         Failed(message);
