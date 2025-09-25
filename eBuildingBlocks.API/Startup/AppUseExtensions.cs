@@ -62,16 +62,6 @@ public static class AppUseExtensions
             });
         });
 
-        var pathBase = configuration.GetValue<string>("PathBase");
-#if DEBUG
-        Console.WriteLine("This code runs only in Debug build.");
-#else
-                if (string.IsNullOrEmpty(pathBase))
-                {
-                    throw new ArgumentNullException("PathBase", "PathBase is not configured in appsettings.json or environment variables.");
-                }
-#endif
-
 
         app.UseSwaggerUI(options =>
         {
