@@ -15,4 +15,14 @@ public abstract class BaseController() : ControllerBase
         }
         return Ok(result);
     }
+
+    protected IActionResult ApiResult<T>(ResponseModel<T> result)
+    {
+        if (result.HttpStatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            return BadRequest(result);
+        }
+        return Ok(result);
+    }
+
 }
