@@ -41,7 +41,7 @@ namespace eBuildingBlocks.Infrastructure.Implementations
         {
             if (context == null) return;
 
-            var entries = context.ChangeTracker.Entries<BaseEntity>();
+            var entries = context.ChangeTracker.Entries<AuditableEntity<Guid>>();
 
             var now = DateTime.UtcNow;
             var user = GetCurrentUsername();
@@ -51,10 +51,10 @@ namespace eBuildingBlocks.Infrastructure.Implementations
                 switch (entry.State)
                 {
                     case EntityState.Added:
-                        entry.Entity.Created(user);
+                        entry.Entity.SetCreated(user);
                         break;
                     case EntityState.Modified:
-                        entry.Entity.Updated(user);
+                        entry.Entity.SetModified(user);
                         break;
                 }
             }
@@ -71,7 +71,6 @@ namespace eBuildingBlocks.Infrastructure.Implementations
             {
                 var audit = new AuditLog
                 {
-                    Id = GuidGenerator.NewV7(),
                     TableName = entry.Metadata.GetTableName()!,
                     Action = entry.State.ToString(),
                     KeyValues = Serialize(entry.Properties.Where(p => p.Metadata.IsPrimaryKey())),

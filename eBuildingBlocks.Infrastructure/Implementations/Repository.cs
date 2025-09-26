@@ -1,5 +1,6 @@
 ﻿using eBuildingBlocks.Domain.Interfaces;
 using eBuildingBlocks.Domain.Models;
+using eBuildingBlocks.Domain.Specifications;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -7,7 +8,7 @@ namespace eBuildingBlocks.Infrastructure.Implementations;
 
 public class Repository<TEntity, TKey, TDbContext>(
      TDbContext dbContext
-    ) : UnitOfWork<TDbContext>(dbContext), IRepository<TEntity, TKey> where TEntity : class, Entity<TKey> where TDbContext : DbContext
+    ) : UnitOfWork<TDbContext>(dbContext), IRepository<TEntity, TKey> where TEntity : class, IEntity where TDbContext : DbContext
 {
 
     public IQueryable<TEntity> Queryable => Entities<TEntity>().AsQueryable();
@@ -24,14 +25,7 @@ public class Repository<TEntity, TKey, TDbContext>(
     {
         get
         {
-            var query = Entities<TEntity>().AsNoTracking();
-
-            if (typeof(TEntity).IsSubclassOf(typeof(BaseEntity)))
-            {
-                query = query.Where(e => !(e as BaseEntity)!.IsDeleted);
-            }
-
-            return query;
+            return Entities<TEntity>().AsNoTracking();
         }
     }
     public async Task AddAsync(TEntity entity, CancellationToken cancellationToken = default)
@@ -58,7 +52,7 @@ public class Repository<TEntity, TKey, TDbContext>(
         //        Entities<TEntity>().Update(entity);
         //    }, cancellationToken);
         //}
-        
+
 
         await Task.Run(() =>
         {
@@ -66,36 +60,9 @@ public class Repository<TEntity, TKey, TDbContext>(
         }, cancellationToken);
     }
 
-    public async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default)
-    {
-        return await Entities<TEntity>().SingleOrDefaultAsync(x => x.Id.Equals(id), cancellationToken);
-    }
-    public async Task<TEntity> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> wherePredicate, CancellationToken cancellationToken = default)
-    {
-        var query = GetQueryable.Where(wherePredicate);
-        return await query.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
-    }
-    public async Task<IReadOnlyList<TEntity>> ListAsync(Expression<Func<TEntity, bool>> wherePredicate, CancellationToken cancellationToken = default)
-    {
-        var query = GetQueryable.Where(wherePredicate);
-        return await query.AsNoTracking().ToListAsync(cancellationToken);
-    }
+    public async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken ct = default)
+         => await Entities<TEntity>().FindAsync(new[] { id }, ct);
 
-    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> wherePredicate, CancellationToken cancellation = default)
-    {
-        var query = Entities<TEntity>().Where(wherePredicate);
-        return await query.AsNoTracking().AnyAsync(cancellation);
-    }
-    public async Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken cancellationToken = default)
-    {
-        return await SetAsNoTracking.ToListAsync(cancellationToken);
-    }
-
-    public async Task<bool> ExistsAsync(TKey id, CancellationToken cancellationToken = default)
-    {
-        var query = Entities<TEntity>();
-        return await query.AnyAsync(e => e.Id.Equals(id), cancellationToken);
-    }
 
     public IQueryable<TEntity> Query()
     {
@@ -107,4 +74,26 @@ public class Repository<TEntity, TKey, TDbContext>(
         await SaveChangesAsync(cancellationToken);
         return true;
     }
+
+    public async Task<TEntity?> FirstOrDefaultAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
+        => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec).FirstOrDefaultAsync(ct);
+
+    public async Task<TEntity?> SingleOrDefaultAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
+       => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec).SingleOrDefaultAsync(ct);
+
+
+    public async Task<IReadOnlyList<TEntity>> ListAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
+      => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec).ToListAsync(ct);
+
+
+    public async Task<IReadOnlyList<TEntity>> ListAllAsync(CancellationToken ct = default)
+        => await Entities<TEntity>().AsNoTracking().ToListAsync(ct);
+
+    public async Task<int> CountAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
+       => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec).CountAsync(ct);
+
+
+    public async Task<bool> AnyAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
+     => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec).AnyAsync(ct);
+
 }

@@ -64,5 +64,11 @@
       "Default": "Information",
       "Microsoft.AspNetCore": "Warning"
     }
+  },
+  "MultiTenancy": {
+    "Enabled": true,
+    "Source": "Header",
+    "HeaderName": "X-TenantId",
+    "DefaultTenantId": null
   }
 }

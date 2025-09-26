@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace eBuildingBlocks.Domain.Models
 {
-    public class AuditLog : BaseEntity
+    public class AuditLog 
     {
         public string TableName { get; set; } = null!;
         public string Action { get; set; } = null!; // Insert / Update / Delete

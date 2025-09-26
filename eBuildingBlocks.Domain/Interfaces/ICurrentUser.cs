@@ -8,3 +8,11 @@ public interface ICurrentUser
     public Guid TenantId { get; }
     public string UserAgent { get; }
 }
+
+
+public interface ITenantScope
+{
+    /// <summary>Temporarily override tenant for the current scope (e.g., background jobs).</summary>
+    IDisposable Begin(Guid tenantId);
+    Guid OverrideTenantId { get; }
+}

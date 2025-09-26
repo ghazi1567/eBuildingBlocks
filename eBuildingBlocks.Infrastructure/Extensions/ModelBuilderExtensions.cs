@@ -1,30 +1,34 @@
-﻿using eBuildingBlocks.Domain.Models;
+﻿using eBuildingBlocks.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection;
+using System.Linq.Expressions;
 
 // Namespace updated to eBuildingBlocks
 namespace eBuildingBlocks.Infrastructure.Extensions
 {
     public static class ModelBuilderExtensions
     {
-        public static void ApplyGlobalTenantFilter(this ModelBuilder modelBuilder, Guid tenantId, Type baseType = null)
+        public static void ApplyGlobalTenantFilter(this ModelBuilder modelBuilder, Guid tenantId)
         {
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            foreach (var et in modelBuilder.Model.GetEntityTypes()
+                    .Where(et => typeof(ITenantEntity).IsAssignableFrom(et.ClrType)))
             {
-                if (baseType != null && !baseType.IsAssignableFrom(entityType.ClrType))
-                    continue;
+                var param = Expression.Parameter(et.ClrType, "e");
+                var prop = Expression.Property(param, nameof(ITenantEntity.TenantId));
+                var currentTenant = Expression.Constant(tenantId, typeof(Guid));
+                var body = Expression.Equal(prop, currentTenant);
+                var lambda = Expression.Lambda(body, param);
+                modelBuilder.Entity(et.ClrType).HasQueryFilter(lambda);
+            }
 
-                var method = typeof(ModelBuilderExtensions)
-                    .GetMethod(nameof(SetGlobalQuery), BindingFlags.NonPublic | BindingFlags.Static)
-                    .MakeGenericMethod(entityType.ClrType);
 
-                method.Invoke(null, new object[] { modelBuilder, tenantId });
+            // (Optional) index TenantId everywhere it exists
+            foreach (var et in modelBuilder.Model.GetEntityTypes()
+                     .Where(et => typeof(ITenantEntity).IsAssignableFrom(et.ClrType)))
+            {
+                modelBuilder.Entity(et.ClrType).HasIndex(nameof(ITenantEntity.TenantId));
             }
         }
 
-        private static void SetGlobalQuery<TEntity>(ModelBuilder modelBuilder, Guid tenantId) where TEntity : class, ITenantEntity
-        {
-            modelBuilder.Entity<TEntity>().HasQueryFilter(e => e.TenantId == tenantId);
-        }
+       
     }
 }

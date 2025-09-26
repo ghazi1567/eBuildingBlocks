@@ -125,7 +125,7 @@ public static class ServiceCollectionExtensions
     {
         // Usually always on; gate only if you want to optionally remove it
         services.AddHttpContextAccessor();
-        services.AddSingleton<ICurrentUser, CurrentUser>();
+        services.AddSingleton<ICurrentUser, TenantResolver>();
         return services;
     }
 
