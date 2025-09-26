@@ -1,0 +1,68 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "",
+    "RedisConnection": "localhost:6379"
+  },
+  "Features": {
+    "Cors": {
+      "Enabled": true,
+      "Policy": "allowall"
+    },
+    "Swagger": {
+      "Enabled": true,
+      "Title": "API",
+      "Version": "v1",
+      "RoutePrefix": ""
+    },
+    "Hangfire": {
+      "Enabled": true,
+      "DashboardPath": "/hangfire",
+      "User": "admin",
+      "Password": "admin",
+      "UseMemoryStorage": true
+    },
+    "Metrics": {
+      "Enabled": true,
+      "Path": "/metrics"
+    },
+    "Authorization": { "Enabled": true },
+    "Middlewares": {
+      "Enabled": true,
+      "GlobalException": true,
+      "HttpResponse": true
+    },
+    "Endpoints": {
+      "Enabled": true,
+      "MapControllers": true,
+      "HealthChecks": {
+        "Enabled": true,
+        "Path": "/healthz"
+      },
+      "Metrics": {
+        "Enabled": true,
+        "Path": "/metrics"
+      }
+    },
+    "Serilog": { "Enabled": true },
+    "Controllers": { "Enabled": true },
+    "ApiVersioning": {
+      "Enabled": true,
+      "DefaultVersion": "1.0"
+    },
+    "OpenTelemetry": {
+      "Enabled": false,
+      "Name": "DefaultApiService",
+      "OtlpUrl": "http://localhost:4317"
+    },
+    "MemoryCache": { "Enabled": true },
+    "Redis": { "Enabled": false },
+
+    "FeatureManagement": { "Enabled": false }
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  }
+}
