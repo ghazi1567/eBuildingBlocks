@@ -1,8 +1,8 @@
-﻿using eBuildingBlocks.Application;
+﻿using eBuildingBlocks.API.Features;
+using eBuildingBlocks.Application;
 using eBuildingBlocks.Application.Middlewares;
 using Hangfire;
 using Hangfire.Dashboard;
-using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
@@ -19,107 +19,149 @@ public static class AppUseExtensions
     public static IApplicationBuilder BaseAppUse(this IApplicationBuilder app, IConfiguration configuration)
     {
         app
-            .UsingCors()
-            .UsingSwagger(configuration)
-            .UsingHangfire()
-            .UsingMetrics()
-            .UsingRouting()
-            .UsingAuthorization()
-            .UsingMiddlewares()
-            .UsingEndpoints()
-            .UsingSerilog();
+           .UsingCors(configuration)
+           .UsingSwagger(configuration)
+           .UsingHangfire(configuration)
+           .UsingMetrics(configuration)
+           .UsingRouting(configuration)
+           .UsingAuthorization(configuration)
+           .UsingMiddlewares(configuration)
+           .UsingEndpoints(configuration)
+           .UsingSerilog(configuration);
 
         return app;
     }
 
-    public static IApplicationBuilder UsingMiddlewares(this IApplicationBuilder app)
+    public static IApplicationBuilder UsingMiddlewares(this IApplicationBuilder app, IConfiguration cfg)
     {
-        app.UseMiddleware<GlobalExceptionHandler>();
-        app.UseMiddleware<HttpResponseMiddleware>();
+        if (!FeatureGate.Enabled(cfg, "Features:Middlewares")) return app;
+
+        if (cfg.GetValue("Features:Middlewares:GlobalException", true))
+            app.UseMiddleware<GlobalExceptionHandler>();
+
+        if (cfg.GetValue("Features:Middlewares:HttpResponse", true))
+            app.UseMiddleware<HttpResponseMiddleware>();
 
         return app;
     }
 
-    public static IApplicationBuilder UsingCors(this IApplicationBuilder app)
+    public static IApplicationBuilder UsingCors(this IApplicationBuilder app, IConfiguration cfg)
     {
-        app.UseCors("allowall");
+        if (!FeatureGate.Enabled(cfg, "Features:Cors")) return app;
 
+        var policy = cfg["Features:Cors:Policy"] ?? "allowall";
+        app.UseCors(policy);
         return app;
     }
 
-    public static IApplicationBuilder UsingSwagger(this IApplicationBuilder app, IConfiguration configuration)
+    public static IApplicationBuilder UsingSwagger(this IApplicationBuilder app, IConfiguration cfg)
     {
+        if (!FeatureGate.Enabled(cfg, "Features:Swagger")) return app;
+
         app.UseSwagger(c =>
         {
             c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
             {
                 var pathBase = httpReq.Headers["X-Forwarded-Prefix"].FirstOrDefault();
-                pathBase = "";
                 if (!string.IsNullOrEmpty(pathBase))
-                {
-                    swaggerDoc.Servers = new List<OpenApiServer> { new OpenApiServer { Url = pathBase } };
-                }
+                    swaggerDoc.Servers = new List<OpenApiServer> { new() { Url = pathBase } };
             });
         });
 
+        var title = cfg["Features:Swagger:Title"] ?? "API";
+        var version = cfg["Features:Swagger:Version"] ?? "v1";
+        var routePrefix = cfg["Features:Swagger:RoutePrefix"]; // "" for root
 
         app.UseSwaggerUI(options =>
         {
-            options.SwaggerEndpoint($"/swagger/v1/swagger.json", "API V1");
+            options.SwaggerEndpoint($"/swagger/{version}/swagger.json", $"{title} {version}");
+            if (routePrefix is not null) options.RoutePrefix = routePrefix; // null = keep default
         });
 
         return app;
     }
-
-    public static IApplicationBuilder UsingAuthorization(this IApplicationBuilder app)
+    public static IApplicationBuilder UsingAuthorization(this IApplicationBuilder app, IConfiguration cfg)
     {
+        if (!FeatureGate.Enabled(cfg, "Features:Authorization")) return app;
+
         app.UseAuthentication();
         app.UseAuthorization();
-
         return app;
     }
 
-    public static IApplicationBuilder UsingHangfire(this IApplicationBuilder app)
+    public static IApplicationBuilder UsingHangfire(this IApplicationBuilder app, IConfiguration cfg)
     {
-        app.UseHangfireDashboard("/hangfire", new DashboardOptions
+        if (!FeatureGate.Enabled(cfg, "Features:Hangfire")) return app;
+
+        var path = cfg["Features:Hangfire:DashboardPath"] ?? "/hangfire";
+        var user = cfg["Features:Hangfire:User"] ?? "admin";
+        var pass = cfg["Features:Hangfire:Password"] ?? "admin";
+
+        app.UseHangfireDashboard(path, new DashboardOptions
         {
-            Authorization = new[] { new BasicAuthAuthorizationFilter("admin", "admin") }
+            Authorization = new[] { new BasicAuthAuthorizationFilter(user, pass) }
         });
 
         return app;
     }
 
 
-    public static IApplicationBuilder UsingMetrics(this IApplicationBuilder app)
+    public static IApplicationBuilder UsingMetrics(this IApplicationBuilder app, IConfiguration cfg)
     {
+        if (!FeatureGate.Enabled(cfg, "Features:Metrics")) return app;
+
+        // Prometheus HTTP request duration/labels etc.
         app.UseHttpMetrics();
-
         return app;
     }
 
-    public static IApplicationBuilder UsingRouting(this IApplicationBuilder app)
+
+    public static IApplicationBuilder UsingRouting(this IApplicationBuilder app, IConfiguration cfg)
     {
+        // Routing is often required; gate only if you really want to allow disabling
         app.UseRouting();
-
         return app;
     }
 
-    public static IApplicationBuilder UsingEndpoints(this IApplicationBuilder app)
+    public static IApplicationBuilder UsingEndpoints(this IApplicationBuilder app, IConfiguration cfg)
     {
+        if (!FeatureGate.Enabled(cfg, "Features:Endpoints", fallback: true))
+            return app;
+
         app.UseEndpoints(endpoints =>
         {
-            endpoints.MapControllers();
-            endpoints.MapHealthChecks("/healthz", new HealthCheckOptions { ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse });
-            endpoints.MapMetrics("/metrics");
+            if (cfg.GetValue("Features:Endpoints:MapControllers", true))
+                endpoints.MapControllers();
+
+            // Health checks
+            if (FeatureGate.Enabled(cfg, "Features:Endpoints:HealthChecks"))
+            {
+                var healthPath = cfg["Features:Endpoints:HealthChecks:Path"] ?? "/healthz";
+                endpoints.MapHealthChecks(healthPath, new HealthCheckOptions
+                {
+                    // Customize as needed:
+                    // ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+                });
+            }
+
+            // Prometheus scrape endpoint
+            if (FeatureGate.Enabled(cfg, "Features:Endpoints:Metrics") ||
+                FeatureGate.Enabled(cfg, "Features:Metrics")) // allow either section to turn it on
+            {
+                var metricsPath = cfg["Features:Endpoints:Metrics:Path"] ?? cfg["Features:Metrics:Path"] ?? "/metrics";
+                endpoints.MapMetrics(metricsPath);
+            }
         });
 
         return app;
     }
 
-    public static IApplicationBuilder UsingSerilog(this IApplicationBuilder app)
+    public static IApplicationBuilder UsingSerilog(this IApplicationBuilder app, IConfiguration cfg)
     {
-        //app.useseri
+        if (!FeatureGate.Enabled(cfg, "Features:Serilog")) return app;
 
+        // Serilog request logging middleware if you enabled it in Program.cs builder
+        // app.UseSerilogRequestLogging();
         return app;
     }
 }

@@ -1,6 +1,6 @@
 ﻿using Asp.Versioning;
+using eBuildingBlocks.API.Features;
 using eBuildingBlocks.Domain.Interfaces;
-using eBuildingBlocks.Infrastructure.Implementations;
 using Hangfire;
 using Hangfire.MemoryStorage;
 using Microsoft.Extensions.Configuration;
@@ -8,10 +8,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.FeatureManagement;
 using Microsoft.OpenApi.Models;
-using StackExchange.Redis;
-using System.Text.Json.Serialization;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using StackExchange.Redis;
+using System.Text.Json.Serialization;
 
 namespace BuildingBlocks.API.Startup;
 
@@ -20,45 +20,56 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection BaseRegister(this IServiceCollection services,
         IConfiguration configuration, IHostBuilder hostBuilder)
     {
+        // order is explicit; each method no-ops if the feature is disabled
         services
-            .RegisterControllers()
-            .RegisterAPIVersioning()
+            .RegisterControllers(configuration)
+            .RegisterAPIVersioning(configuration)
             .RegisterLog(configuration)
-            .RegisterMemoryCache()
+            .RegisterMemoryCache(configuration)
             .RegisterRedis(configuration)
-            .RegisterCurrentUser()
-            .RegisterSwagger()
-            .RegisterCors()
-            .RegisterHangfire();
+            .RegisterCurrentUser(configuration)
+            .RegisterSwagger(configuration)
+            .RegisterCors(configuration)
+            .RegisterFeatureManagement(configuration)
+            .RegisterHangfire(configuration);
 
         return services;
     }
 
-    private static IServiceCollection RegisterControllers(this IServiceCollection services)
+    private static IServiceCollection RegisterControllers(this IServiceCollection services, IConfiguration cfg)
     {
+        if (!FeatureGate.Enabled(cfg, "Features:Controllers", fallback: true)) return services;
+
         services
             .AddControllers()
-            .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+            .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-        services.AddEndpointsApiExplorer();
+        // Only add API explorer if Swagger might be used
+        if (FeatureGate.Enabled(cfg, "Features:Swagger"))
+            services.AddEndpointsApiExplorer();
 
         return services;
     }
 
-    public static IServiceCollection RegisterAPIVersioning(this IServiceCollection services)
+    public static IServiceCollection RegisterAPIVersioning(this IServiceCollection services, IConfiguration cfg)
     {
-        services
+        if (!FeatureGate.Enabled(cfg, "Features:ApiVersioning")) return services;
 
+        var ver = cfg["Features:ApiVersioning:DefaultVersion"] ?? "1.0";
+        var parts = ver.Split('.', 2);
+        var major = int.TryParse(parts[0], out var m) ? m : 1;
+        var minor = parts.Length > 1 && int.TryParse(parts[1], out var n) ? n : 0;
+
+        services
             .AddApiVersioning(options =>
             {
-                options.DefaultApiVersion = new ApiVersion(1, 0);
+                options.DefaultApiVersion = new ApiVersion(major, minor);
                 options.ReportApiVersions = true;
                 options.AssumeDefaultVersionWhenUnspecified = true;
                 options.ApiVersionReader = ApiVersionReader.Combine(
                     new UrlSegmentApiVersionReader(),
                     new HeaderApiVersionReader("X-API-Version"));
             })
-
             .AddApiExplorer(options =>
             {
                 options.GroupNameFormat = "'v'V";
@@ -68,71 +79,69 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection RegisterLog(this IServiceCollection services,
-        IConfiguration configuration)
+    public static IServiceCollection RegisterLog(this IServiceCollection services, IConfiguration cfg)
     {
-        var serviceName = string.IsNullOrEmpty(configuration["OpenTelemetry:name"])? "": configuration["OpenTelemetry:name"];
-        var url = string.IsNullOrEmpty(configuration["OpenTelemetry:url"]) ? "" : configuration["OpenTelemetry:url"];
+        if (!FeatureGate.Enabled(cfg, "Features:OpenTelemetry")) return services;
 
-        if (string.IsNullOrEmpty(url))
-        {
-            return services;
-        }
-        if (string.IsNullOrEmpty(serviceName))
-            serviceName = "DefaultApiService";
+        var serviceName = cfg["Features:OpenTelemetry:Name"] ?? "DefaultApiService";
+        var url = cfg["Features:OpenTelemetry:OtlpUrl"];
 
         services.AddOpenTelemetry()
-        .WithTracing(tracerProviderBuilder =>
+        .WithTracing(tp =>
         {
-            tracerProviderBuilder
-                .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation()
-                .SetResourceBuilder(ResourceBuilder.CreateDefault()
-                    .AddService(serviceName))  // <-- use your service name
-                .AddOtlpExporter(options =>
-                {
-                    options.Endpoint = new Uri(url);
-                });
+            tp.AddAspNetCoreInstrumentation()
+              .AddHttpClientInstrumentation()
+              .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName));
+
+            if (!string.IsNullOrWhiteSpace(url))
+            {
+                tp.AddOtlpExporter(o => o.Endpoint = new Uri(url));
+            }
         });
 
         return services;
     }
 
-    public static IServiceCollection RegisterMemoryCache(this IServiceCollection services)
+    public static IServiceCollection RegisterMemoryCache(this IServiceCollection services, IConfiguration cfg)
     {
+        if (!FeatureGate.Enabled(cfg, "Features:MemoryCache", fallback: true)) return services;
         services.AddMemoryCache();
-
         return services;
     }
 
-    public static IServiceCollection RegisterRedis(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection RegisterRedis(this IServiceCollection services, IConfiguration cfg)
     {
-        services.AddSingleton<IConnectionMultiplexer>(provider =>
-        {
-            var cfg = configuration.GetConnectionString("RedisConnection");
-            return ConnectionMultiplexer.Connect(cfg!);
-        });
+        if (!FeatureGate.Enabled(cfg, "Features:Redis")) return services;
 
+        var conn = cfg.GetConnectionString("RedisConnection");
+        if (string.IsNullOrWhiteSpace(conn))
+            return services; // silent no-op if not configured
+
+        services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(conn));
         return services;
     }
 
-
-    private static IServiceCollection RegisterCurrentUser(this IServiceCollection services)
+    private static IServiceCollection RegisterCurrentUser(this IServiceCollection services, IConfiguration cfg)
     {
+        // Usually always on; gate only if you want to optionally remove it
         services.AddHttpContextAccessor();
         services.AddSingleton<ICurrentUser, CurrentUser>();
-
         return services;
     }
 
-    private static IServiceCollection RegisterSwagger(this IServiceCollection services)
+    private static IServiceCollection RegisterSwagger(this IServiceCollection services, IConfiguration cfg)
     {
+        if (!FeatureGate.Enabled(cfg, "Features:Swagger")) return services;
+
+        var title = cfg["Features:Swagger:Title"] ?? "Project Swagger";
+        var version = cfg["Features:Swagger:Version"] ?? "v1";
+
         services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo
+            c.SwaggerDoc(version, new OpenApiInfo
             {
-                Title = "Project Swagger",
-                Version = "v1",
+                Title = title,
+                Version = version,
                 Description = "",
                 Contact = new OpenApiContact
                 {
@@ -141,7 +150,6 @@ public static class ServiceCollectionExtensions
                     Url = new Uri("https://www.linkedin.com/in/inam1567/")
                 }
             });
-
 
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
@@ -152,18 +160,14 @@ public static class ServiceCollectionExtensions
                 BearerFormat = "JWT",
                 Scheme = "bearer"
             });
-            // 👇 Add this to apply the security to all endpoints
+
             c.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
                 {
                     new OpenApiSecurityScheme
                     {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        },
-                        Scheme = "oauth2", // can be any string
+                        Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" },
+                        Scheme = "oauth2",
                         Name = "Bearer",
                         In = ParameterLocation.Header
                     },
@@ -175,43 +179,48 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    private static IServiceCollection RegisterCors(this IServiceCollection services)
+    private static IServiceCollection RegisterCors(this IServiceCollection services, IConfiguration cfg)
     {
+        if (!FeatureGate.Enabled(cfg, "Features:Cors")) return services;
+
+        var policyName = cfg["Features:Cors:Policy"] ?? "allowall";
         services.AddCors(options =>
         {
-            options.AddPolicy("allowall", policy =>
+            options.AddPolicy(policyName, policy =>
             {
-                policy
-                .AllowAnyOrigin()
-                .AllowAnyHeader()
-                .AllowAnyMethod();
+                policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
             });
         });
 
         return services;
     }
 
-  
-
-   
-
-    public static IServiceCollection RegisterFeatureManagement(this IServiceCollection services)
+    public static IServiceCollection RegisterFeatureManagement(this IServiceCollection services, IConfiguration cfg)
     {
-        services.AddFeatureManagement();
+        if (!FeatureGate.Enabled(cfg, "Features:FeatureManagement")) return services;
 
+        services.AddFeatureManagement();
         return services;
     }
 
-    public static IServiceCollection RegisterHangfire(this IServiceCollection services)
+    public static IServiceCollection RegisterHangfire(this IServiceCollection services, IConfiguration cfg)
     {
-        services.AddHangfire(configuration => configuration
-            .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-            .UseSimpleAssemblyNameTypeSerializer()
-            .UseDefaultTypeSerializer()
-            .UseMemoryStorage());
+        if (!FeatureGate.Enabled(cfg, "Features:Hangfire")) return services;
+
+        var useMem = cfg.GetValue("Features:Hangfire:UseMemoryStorage", true);
+
+        services.AddHangfire(configuration =>
+        {
+            configuration
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseDefaultTypeSerializer();
+
+            if (useMem) configuration.UseMemoryStorage();
+            // else: plug SQL/Redis/etc here based on more config keys
+        });
 
         services.AddHangfireServer();
-
         return services;
     }
 }
