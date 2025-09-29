@@ -2,90 +2,100 @@
 using eBuildingBlocks.Application.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using System.Net;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace eBuildingBlocks.Application;
 
-public class GlobalExceptionHandler(RequestDelegate next, ILogger<GlobalExceptionHandler> logger)
+public sealed class GlobalExceptionHandlerMiddleware
 {
+    private readonly RequestDelegate _next;
+    private readonly ILogger<GlobalExceptionHandlerMiddleware> _logger;
+
+    public GlobalExceptionHandlerMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlerMiddleware> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
+
     public async Task Invoke(HttpContext context)
     {
-        var result = new ResponseModel<object>();
-
         try
         {
-            await next(context);
+            await _next(context);
         }
-        catch (BadRequestException ex)
+        catch (Exception ex) // one catch only
         {
-            result.AddErrorMessage(ex.Error);
-            await SetContext(context, result, StatusCodes.Status400BadRequest, ex);
-        }
-        catch (UnauthorizedException ex)
-        {
-            result.AddErrorMessage(ex.Error);
-            await SetContext(context, result, StatusCodes.Status401Unauthorized, ex);
-        }
-        catch (ForbiddenException ex)
-        {
-            result.AddErrorMessage(ex.Error);
-            await SetContext(context, result, StatusCodes.Status403Forbidden, ex);
-        }
-        catch (NotFoundException ex)
-        {
-            result.AddErrorMessage(ex.Error);
-            await SetContext(context, result, StatusCodes.Status404NotFound, ex);
-        }
-        catch (MethodNotAllowedException ex)
-        {
-            result.AddErrorMessage(ex.Error);
-            await SetContext(context, result, StatusCodes.Status405MethodNotAllowed, ex);
-        }
-        catch (ConflictException ex)
-        {
-            result.AddErrorMessage(ex.Error);
-            await SetContext(context, result, StatusCodes.Status409Conflict, ex);
-        }
-        catch (TooManyRequestException ex)
-        {
-            result.AddErrorMessage(ex.Error);
-            await SetContext(context, result, StatusCodes.Status429TooManyRequests, ex);
-        }
-        catch (Exceptions.NotImplementedException ex)
-        {
-            result.AddErrorMessage(ex.Error);
-            await SetContext(context, result, StatusCodes.Status501NotImplemented, ex);
-        }
-        catch (Exception ex)
-        {
-            //logger.LogError(ex.Message);
-
-            result.AddErrorMessage(ex.Message);
-            await SetContext(context, result, StatusCodes.Status500InternalServerError, ex);
+            await HandleExceptionAsync(context, ex);
         }
     }
 
-    private async Task SetContext(HttpContext context, ResponseModel<object> result, int statusCode, Exception ex)
+    private async Task HandleExceptionAsync(HttpContext ctx, Exception ex)
     {
-        logger.LogError(
-            "Error in GlobalExceptionHandler " +
-            "at {datetime}, " +
-            "with status code {statusCode} " +
-            "and exception {exception}"
-            , DateTime.Now, statusCode, ex);
+        // Don’t try to write if headers/body already sent
+        if (ctx.Response.HasStarted)
+        {
+            _logger.LogError(ex, "Unhandled exception after response started. TraceId={TraceId}", ctx.TraceIdentifier);
+            return;
+        }
 
-        context.Response.StatusCode = statusCode;
-        context.Response.ContentType = "application/json";
-        await context.Response.WriteAsync(JsonSerializer.Serialize(result, GetOptions()));
+        var (status, response) = MapException(ex);
+
+        // Log with full exception + trace id
+        _logger.LogError(
+            ex,
+            "Unhandled exception mapped to {StatusCode}. Path={Path} TraceId={TraceId}",
+            (int)status, ctx.Request.Path, ctx.TraceIdentifier
+        );
+
+        ctx.Response.Clear();
+        ctx.Response.StatusCode = (int)status;
+        ctx.Response.ContentType = "application/json; charset=utf-8";
+
+        var payload = JsonSerializer.Serialize(response, JsonOptions);
+        await ctx.Response.WriteAsync(payload);
     }
 
-    private static JsonSerializerOptions GetOptions()
-    {
-        return new()
+    /// <summary>
+    /// Central mapping of exception -> (status, Response)
+    /// Add your domain exceptions here.
+    /// </summary>
+    private static (HttpStatusCode Status, ResponseModel Response) MapException(Exception ex) =>
+        ex switch
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            // Domain/application exceptions (examples)
+            BadRequestException bre
+                => (HttpStatusCode.BadRequest, ResponseModel.Fail(bre.Error ?? "Bad request")),
+            UnauthorizedException ue
+                => (HttpStatusCode.Unauthorized, ResponseModel.Fail(ue.Error ?? "Unauthorized", HttpStatusCode.Unauthorized)),
+            ForbiddenException fe
+                => (HttpStatusCode.Forbidden, ResponseModel.Fail(fe.Error ?? "Forbidden", HttpStatusCode.Forbidden)),
+            NotFoundException nfe
+                => (HttpStatusCode.NotFound, ResponseModel.Fail(nfe.Error ?? "Not found", HttpStatusCode.NotFound)),
+            MethodNotAllowedException mna
+                => (HttpStatusCode.MethodNotAllowed, ResponseModel.Fail(mna.Error ?? "Method not allowed", HttpStatusCode.MethodNotAllowed)),
+            ConflictException ce
+                => (HttpStatusCode.Conflict, ResponseModel.Fail(ce.Error ?? "Conflict", HttpStatusCode.Conflict)),
+            TooManyRequestException tm
+                => (HttpStatusCode.TooManyRequests, ResponseModel.Fail(tm.Error ?? "Too many requests", HttpStatusCode.TooManyRequests)),
+            Exceptions.NotImplementedException nie
+                => (HttpStatusCode.NotImplemented, ResponseModel.Fail(nie.Error ?? "Not implemented", HttpStatusCode.NotImplemented)),
+
+            // Cancellation: surface 499 or 400; 499 is non-standard—many stick to 400
+            OperationCanceledException
+                => (HttpStatusCode.BadRequest, ResponseModel.Fail("Request canceled", HttpStatusCode.BadRequest)),
+
+            // Fallback
+            _ => (HttpStatusCode.InternalServerError, ResponseModel.Fail("An unexpected error occurred.", HttpStatusCode.InternalServerError))
         };
-    }
+
+
+
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        WriteIndented = false
+    };
 }

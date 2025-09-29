@@ -1,192 +1,144 @@
 ﻿using System.Net;
 
 namespace eBuildingBlocks.Application.Features;
-public class ResponseModel<T> : ResponseModel
+
+public record ResponseModel
 {
-    public T? Data { get; set; }
+    public bool Success { get; init; }
+    public HttpStatusCode StatusCode { get; init; } = HttpStatusCode.OK;
 
-    public ResponseModel<T> AddData(T value)
+    // Backing field for explicit override
+    private string? _message;
+    public string? Message
     {
-        Data = value;
-        return this;
-    }
-
-    /// <summary>
-    /// Add success message and set response data
-    /// </summary>
-    /// <param name="value">data to be return</param>
-    /// <param name="message"></param>
-    /// <returns></returns>
-    public ResponseModel<T> AddSuccessMessage(T value, string message)
-    {
-        Data = value;
-        AddSuccessMessage(message);
-        Success = true;
-        return this;
-    }
-
-    /// <summary>
-    /// add multiple success messages and set response data
-    /// </summary>
-    /// <param name="value"></param>
-    /// <param name="messages"></param>
-    /// <returns></returns>
-    public ResponseModel<T> AddSuccessMessage(T value, List<string> messages)
-    {
-        Data = value;
-        foreach (string message in messages)
+        get
         {
-            AddSuccessMessage(message);
-        }
+            if (!string.IsNullOrWhiteSpace(_message))
+                return _message;
 
-        return this;
+            if (Success && Successes.Count > 0)
+                return Successes[0];
+
+            if (!Success && Errors.Count > 0)
+                return Errors[0];
+
+            return null;
+        }
+        init => _message = value;
     }
 
-    public new ResponseModel<T> AddErrorMessage(string message)
-    {
-        if (!string.IsNullOrEmpty(message) && !Errors.Contains(message))
+    public List<string> Successes { get; init; } = [];
+    public List<string> Errors { get; init; } = [];
+    public Dictionary<string, string[]> ValidationErrors { get; init; } = [];
+
+    // ---------- Static factories ----------
+    public static ResponseModel Ok(string? message = null)
+        => new()
         {
-            Errors.Add(message);
-            HttpStatusCode = HttpStatusCode.BadRequest;
-        }
-        return this;
-    }
+            Success = true,
+            StatusCode = HttpStatusCode.OK,
+            Message = message,
+            Successes = message is null ? [] : [message]
+        };
 
-    public new ResponseModel<T> AddSuccessMessage(string message)
-    {
-        if (!string.IsNullOrEmpty(message) && !Successes.Contains(message))
+    public static ResponseModel Fail(string message, HttpStatusCode status = HttpStatusCode.BadRequest)
+        => new()
         {
-            Successes.Add(message);
-            HttpStatusCode = HttpStatusCode.OK;
-        }
-        return this;
-    }
+            Success = false,
+            StatusCode = status,
+            Message = message,
+            Errors = string.IsNullOrWhiteSpace(message) ? [] : [message]
+        };
 
-    public new ResponseModel<T> AddSuccessMessage(List<string> messages)
-    {
-        foreach (string message in messages)
+    public static ResponseModel ValidationFail(Dictionary<string, string[]> errors, string? message = null)
+        => new()
         {
-            AddSuccessMessage(message);
-            HttpStatusCode = HttpStatusCode.OK;
-        }
+            Success = false,
+            StatusCode = HttpStatusCode.BadRequest,
+            Message = message,
+            Errors = message is null ? [] : [message],
+            ValidationErrors = errors ?? []
+        };
 
-        return this;
-    }
-
-
-    public new ResponseModel<T> AddErrorMessage(List<string> messages)
-    {
-        foreach (string message in messages)
+    // ---------- Fluent adders ----------
+    public ResponseModel WithSuccess(string message)
+        => this with
         {
-            AddErrorMessage(message);
-            HttpStatusCode = HttpStatusCode.BadRequest;
-        }
-        Success = false;
-        return this;
-    }
+            Success = true,
+            StatusCode = HttpStatusCode.OK,
+            Successes = AddDistinct(Successes, message)
+        };
 
-    public new ResponseModel<T> ValidationFailed(string message, Dictionary<string, string[]> errors)
+    public ResponseModel WithError(string message, HttpStatusCode? status = null)
+        => this with
+        {
+            Success = false,
+            StatusCode = status ?? HttpStatusCode.BadRequest,
+            Errors = AddDistinct(Errors, message)
+        };
+
+    protected static List<string> AddDistinct(List<string> list, string message)
     {
-        Success = false;
-        AddErrorMessage(message);
-        AddValidationErrorMessages(errors);
-        HttpStatusCode = HttpStatusCode.BadRequest;
-        return this;
+        if (!string.IsNullOrWhiteSpace(message) && !list.Contains(message))
+            list = [.. list, message];
+        return list;
     }
 }
 
-public class ResponseModel
+public record ResponseModel<T> : ResponseModel
 {
+    public T? Data { get; init; }
 
-
-    public HttpStatusCode HttpStatusCode { get; set; }
-    public bool Success { get; set; }
-
-    public List<string> Errors { get; set; } = [];
-
-    public Dictionary<string, string[]> ValidationErrors { get; set; } = [];
-
-    public List<string> Successes { get; set; } = [];
-
-
-
-    public ResponseModel AddSuccessMessage(List<string> messages)
-    {
-        foreach (string message in messages)
+    // ---------- Static factories ----------
+    public static ResponseModel<T> Ok(T data, string? message = null)
+        => new()
         {
-            AddSuccessMessage(message);
-            HttpStatusCode = HttpStatusCode.OK;
-        }
+            Success = true,
+            StatusCode = HttpStatusCode.OK,
+            Data = data,
+            Message = message,
+            Successes = message is null ? [] : [message]
+        };
 
-        return this;
-    }
-
-
-    public ResponseModel AddErrorMessage(List<string> messages)
-    {
-        foreach (string message in messages)
+    public static ResponseModel<T> Created(T data, string? message = null)
+        => new()
         {
-            AddErrorMessage(message);
-            HttpStatusCode = HttpStatusCode.BadRequest;
-        }
-        Success = false;
-        return this;
-    }
+            Success = true,
+            StatusCode = HttpStatusCode.Created,
+            Data = data,
+            Message = message,
+            Successes = message is null ? [] : [message]
+        };
 
-
-
-
-    public ResponseModel AddSuccessMessage(string message)
-    {
-        if (!string.IsNullOrEmpty(message) && !Successes.Contains(message))
+    public static ResponseModel<T> Fail(string message, HttpStatusCode status = HttpStatusCode.BadRequest)
+        => new()
         {
-            Successes.Add(message);
-            HttpStatusCode = HttpStatusCode.OK;
-        }
-        return this;
-    }
+            Success = false,
+            StatusCode = status,
+            Message = message,
+            Errors = string.IsNullOrWhiteSpace(message) ? [] : [message]
+        };
 
-
-
-    public ResponseModel AddErrorMessage(string message)
-    {
-        if (!string.IsNullOrEmpty(message) && !Errors.Contains(message))
+    public static ResponseModel<T> ValidationFail(Dictionary<string, string[]> errors, string? message = null)
+        => new()
         {
-            Errors.Add(message);
-            HttpStatusCode = HttpStatusCode.BadRequest;
-        }
-        return this;
-    }
+            Success = false,
+            StatusCode = HttpStatusCode.BadRequest,
+            Message = message,
+            Errors = message is null ? [] : [message],
+            ValidationErrors = errors ?? []
+        };
 
-    public ResponseModel AddValidationErrorMessages(Dictionary<string, string[]> errors)
-    {
-        ValidationErrors = errors;
-        HttpStatusCode = HttpStatusCode.BadRequest;
-        return this;
-    }
+    // ---------- Fluent variants ----------
+    public ResponseModel<T> WithData(T value)
+        => this with { Data = value };
 
-    private ResponseModel Succeed(string message)
-    {
-        AddSuccessMessage(message);
-        Success = true;
-        HttpStatusCode = HttpStatusCode.OK;
-        return this;
-    }
+    public new ResponseModel<T> WithSuccess(string message)
+        => (ResponseModel<T>)base.WithSuccess(message);
 
-    private ResponseModel Failed(string message)
-    {
-        AddErrorMessage(message);
-        Success = false;
-        HttpStatusCode = HttpStatusCode.BadRequest;
-        return this;
-    }
+    public new ResponseModel<T> WithError(string message, HttpStatusCode? status = null)
+        => (ResponseModel<T>)base.WithError(message, status);
 
-    public ResponseModel ValidationFailed(string message, Dictionary<string, string[]> errors)
-    {
-        Success = false;
-        Failed(message);
-        AddValidationErrorMessages(errors);
-        HttpStatusCode = HttpStatusCode.BadRequest;
-        return this;
-    }
+    // ---------- Convenience conversion ----------
+    public static implicit operator ResponseModel<T>(T value) => Ok(value);
 }

@@ -9,7 +9,7 @@ public abstract class BaseController() : ControllerBase
     // TODO: Add base controller methods
     protected IActionResult ApiResult(ResponseModel result)
     {
-        if (result.HttpStatusCode == System.Net.HttpStatusCode.BadRequest)
+        if (result.StatusCode == System.Net.HttpStatusCode.BadRequest)
         {
             return BadRequest(result);
         }
@@ -18,7 +18,7 @@ public abstract class BaseController() : ControllerBase
 
     protected IActionResult ApiResult<T>(ResponseModel<T> result)
     {
-        if (result.HttpStatusCode == System.Net.HttpStatusCode.BadRequest)
+        if (result.StatusCode == System.Net.HttpStatusCode.BadRequest)
         {
             return BadRequest(result);
         }

@@ -37,7 +37,7 @@ public static class AppUseExtensions
         if (!FeatureGate.Enabled(cfg, "Features:Middlewares")) return app;
 
         if (cfg.GetValue("Features:Middlewares:GlobalException", true))
-            app.UseMiddleware<GlobalExceptionHandler>();
+            app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
         if (cfg.GetValue("Features:Middlewares:HttpResponse", true))
             app.UseMiddleware<HttpResponseMiddleware>();
