@@ -49,6 +49,15 @@ public record ResponseModel
             Message = message,
             Errors = string.IsNullOrWhiteSpace(message) ? [] : [message]
         };
+    // Multi-error overload
+    public static ResponseModel Fail(IEnumerable<string> messages, HttpStatusCode status = HttpStatusCode.BadRequest)
+        => new()
+        {
+            Success = false,
+            StatusCode = status,
+            Message = messages?.FirstOrDefault(),
+            Errors = messages?.Where(m => !string.IsNullOrWhiteSpace(m)).Distinct().ToList() ?? []
+        };
 
     public static ResponseModel ValidationFail(Dictionary<string, string[]> errors, string? message = null)
         => new()
@@ -117,6 +126,16 @@ public record ResponseModel<T> : ResponseModel
             StatusCode = status,
             Message = message,
             Errors = string.IsNullOrWhiteSpace(message) ? [] : [message]
+        };
+
+    // Multi-error overload
+    public static ResponseModel<T> Fail(IEnumerable<string> messages, HttpStatusCode status = HttpStatusCode.BadRequest)
+        => new()
+        {
+            Success = false,
+            StatusCode = status,
+            Message = messages?.FirstOrDefault(),
+            Errors = messages?.Where(m => !string.IsNullOrWhiteSpace(m)).Distinct().ToList() ?? []
         };
 
     public static ResponseModel<T> ValidationFail(Dictionary<string, string[]> errors, string? message = null)
