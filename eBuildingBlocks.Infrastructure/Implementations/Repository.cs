@@ -69,11 +69,7 @@ public class Repository<TEntity, TKey, TDbContext>(
         return SetAsNoTracking;
     }
 
-    public async Task<bool> CommitChangesAsync(CancellationToken cancellationToken)
-    {
-        await SaveChangesAsync(cancellationToken);
-        return true;
-    }
+   
 
     public async Task<TEntity?> FirstOrDefaultAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
         => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec).FirstOrDefaultAsync(ct);
