@@ -3,6 +3,7 @@
 public interface ICurrentUser
 {
     string? UserId { get; }
+    string? UserEmail { get; }
     public string? IPAddress { get; }
     public string? UserName { get; }
     public Guid TenantId { get; }

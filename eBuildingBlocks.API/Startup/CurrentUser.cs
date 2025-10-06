@@ -2,6 +2,7 @@
 using eBuildingBlocks.Domain.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace BuildingBlocks.API.Startup;
@@ -35,11 +36,11 @@ public class TenantResolver : ICurrentUser
     public string UserAgent => _httpContextAccessor.HttpContext?.Request?.Headers["User-Agent"].ToString() ?? string.Empty;
     public string IPAddress => _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
     public string UserName => _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
-
-    public string? UserId => _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+    public string? UserEmail => _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+    public string? UserId => _httpContextAccessor.HttpContext?.User.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? string.Empty;
 
     public bool Enabled => multiTenancy.Enabled;
-   
+
     public Guid TenantId
     {
         get
