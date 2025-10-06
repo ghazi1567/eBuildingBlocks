@@ -106,7 +106,7 @@ public record ResponseModel<T> : ResponseModel
             StatusCode = HttpStatusCode.OK,
             Data = data,
             Message = message,
-            Successes = message is null ? [] : [message]
+            Successes = message is null ? [] : [message],
         };
 
     public static ResponseModel<T> Created(T data, string? message = null)
