@@ -61,7 +61,7 @@ public class Repository<TEntity, TKey, TDbContext>(
     }
 
     public async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken ct = default)
-         => await Entities<TEntity>().FindAsync(new[] { id }, ct);
+         => await Entities<TEntity>().FindAsync(id, ct);
 
 
     public IQueryable<TEntity> Query()
