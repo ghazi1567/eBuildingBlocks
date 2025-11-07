@@ -1,4 +1,5 @@
 ﻿using eBuildingBlocks.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore.Query;
 using System.Linq.Expressions;
 
 namespace eBuildingBlocks.Domain.Specifications
@@ -14,9 +15,11 @@ namespace eBuildingBlocks.Domain.Specifications
         public int? Skip { get; protected set; }
         public bool AsNoTracking { get; protected set; } = true;
         public bool IgnoreQueryFilters { get; protected set; } = false;
-
+        public List<Func<IQueryable<T>, IIncludableQueryable<T, object>>> IncludeExpressions { get; } = new();
         protected void AddInclude(Expression<Func<T, object>> include) => Includes.Add(include);
         protected void AddInclude(string includeString) => IncludeStrings.Add(includeString);
+        protected void AddInclude(Func<IQueryable<T>, IIncludableQueryable<T, object>> includeExpression)
+            => IncludeExpressions.Add(includeExpression);
         protected void ApplyPaging(int skip, int take) { Skip = skip; Take = take; }
         protected void ApplyOrderBy(Expression<Func<T, object>> orderBy) => OrderBy = orderBy;
 

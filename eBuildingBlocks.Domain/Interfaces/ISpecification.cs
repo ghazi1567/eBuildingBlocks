@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using Microsoft.EntityFrameworkCore.Query;
+using System.Linq.Expressions;
 
 namespace eBuildingBlocks.Domain.Interfaces
 {
@@ -7,7 +8,7 @@ namespace eBuildingBlocks.Domain.Interfaces
         Expression<Func<T, bool>>? Criteria { get; }
         List<Expression<Func<T, object>>> Includes { get; }
         List<string> IncludeStrings { get; }
-
+        List<Func<IQueryable<T>, IIncludableQueryable<T, object>>> IncludeExpressions { get; }
         Expression<Func<T, object>>? OrderBy { get; }
         Expression<Func<T, object>>? OrderByDescending { get; }
 

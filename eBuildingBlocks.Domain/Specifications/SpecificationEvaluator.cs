@@ -24,6 +24,8 @@ namespace eBuildingBlocks.Domain.Specifications
             // includes
             query = spec.Includes.Aggregate(query, (q, include) => q.Include(include));
             query = spec.IncludeStrings.Aggregate(query, (q, include) => q.Include(include));
+            // apply Include + ThenInclude style
+            query = spec.IncludeExpressions.Aggregate(query, (current, include) => include(current));
 
             // ordering
             if (spec.OrderBy is not null) query = query.OrderBy(spec.OrderBy);
