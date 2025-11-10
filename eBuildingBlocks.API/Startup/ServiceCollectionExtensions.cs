@@ -1,8 +1,10 @@
 ﻿using Asp.Versioning;
 using eBuildingBlocks.API.Features;
+using eBuildingBlocks.API.Helpers;
 using eBuildingBlocks.Domain.Interfaces;
 using Hangfire;
 using Hangfire.MemoryStorage;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -41,7 +43,11 @@ public static class ServiceCollectionExtensions
         if (!FeatureGate.Enabled(cfg, "Features:Controllers", fallback: true)) return services;
 
         services
-            .AddControllers()
+            .AddControllers(options =>
+            {
+                options.Conventions.Add(new RouteTokenTransformerConvention(
+                    new SlugifyParameterTransformer()));
+            })
             .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
         // Only add API explorer if Swagger might be used
