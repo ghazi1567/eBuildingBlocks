@@ -1,4 +1,7 @@
 ﻿using eBuildingBlocks.SMPP.Abstractions;
+using eBuildingBlocks.SMPP.Handlers;
+using eBuildingBlocks.SMPP.Models;
+using eBuildingBlocks.SMPP.Session;
 using eBuildingBlocks.SMPP.Tcp;
 using System.Net;
 
@@ -12,7 +15,7 @@ namespace eBuildingBlocks.SMPP
         private ISmppAuthenticator? _auth;
         private ISmppMessageHandler? _handler;
         private ISmppSessionPolicy? _policy;
-
+        public delegate Task<bool> SmppAuthenticateDelegate(ISmppAuthenticator context);
         private SmppServerBuilder() { }
 
         public static SmppServerBuilder Create() => new();
@@ -52,6 +55,19 @@ namespace eBuildingBlocks.SMPP
             return this;
         }
 
+        public SmppServerBuilder WithAuthenticator(Func<SmppAuthContext, Task<bool>> authenticator)
+        {
+            _auth = new DelegateSmppAuthenticator(authenticator);
+            return this;
+        }
+
+        public SmppServerBuilder WithAuthenticator(Func<string, string, SmppSessionContext, bool> authenticator)
+        {
+            _auth = new DelegateSmppAuthenticator(ctx => Task.FromResult(authenticator(ctx.SystemId, ctx.Password, ctx.Session)));
+
+            return this;
+        }
+
         public SmppServerBuilder WithAuthenticator(ISmppAuthenticator authenticator)
         {
             _auth = authenticator;
@@ -64,9 +80,25 @@ namespace eBuildingBlocks.SMPP
             return this;
         }
 
+        public SmppServerBuilder WithMessageHandler(Func<SmppSessionContext, SmppSubmitRequest, CancellationToken, Task<SmppSubmitResult>> handler)
+        {
+            _handler = new DelegateSmppMessageHandler(handler);
+            return this;
+        }
+
+
         public SmppServerBuilder WithSessionPolicy(ISmppSessionPolicy policy)
         {
             _policy = policy;
+            return this;
+        }
+
+        public SmppServerBuilder WithSessionPolicy(Action<SmppSessionPolicyOptions> configure)
+        {
+            var options = new SmppSessionPolicyOptions();
+            configure(options);
+
+            _policy = new DelegateSmppSessionPolicy(options);
             return this;
         }
 

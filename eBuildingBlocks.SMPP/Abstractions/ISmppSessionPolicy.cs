@@ -1,4 +1,5 @@
 ﻿using eBuildingBlocks.SMPP.Models;
+using eBuildingBlocks.SMPP.Session;
 
 namespace eBuildingBlocks.SMPP.Abstractions
 {

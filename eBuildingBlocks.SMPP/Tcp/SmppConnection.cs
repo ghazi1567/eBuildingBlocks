@@ -17,7 +17,7 @@ namespace eBuildingBlocks.SMPP.Tcp
         private readonly TcpClient _tcp;
         private readonly NetworkStream _stream;
         private readonly SmppFrameDecoder _decoder = new();
-        private readonly SmppSession _session = new();
+        private readonly SmppSessionContext _session = new();
 
         private readonly ISmppAuthenticator _auth;
         private readonly ISmppMessageHandler _handler;
@@ -113,8 +113,13 @@ namespace eBuildingBlocks.SMPP.Tcp
                 await WriteAsync(SmppPduWriter.BuildResponse(SmppCommandIds.bind_transceiver_resp, (uint)SmppCommandStatus.BIND_FAIL, h.Sequence, body), ct);
                 return;
             }
+            var authContext = new SmppAuthContext(
+                  systemId,
+                  password,
+                  _session
+              );
 
-            bool ok = await _auth.AuthenticateAsync(systemId, password, ct);
+            bool ok = await _auth.AuthenticateAsync(authContext);
             if (!ok)
             {
                 var body = SmppPduWriter.CString("");
@@ -139,9 +144,8 @@ namespace eBuildingBlocks.SMPP.Tcp
                 return;
             }
 
-            var sessionCtx = new SmppSessionContext(_session.SystemId!, _session.SessionId);
 
-            if (!_policy.CanSubmit(sessionCtx))
+            if (!_policy.CanSubmit(_session))
             {
                 var body = SmppPduWriter.CString("");
                 await WriteAsync(SmppPduWriter.BuildResponse(SmppCommandIds.submit_sm_resp, (uint)SmppCommandStatus.THROTTLED, h.Sequence, body), ct);
@@ -174,7 +178,7 @@ namespace eBuildingBlocks.SMPP.Tcp
                 SmppSubmitResult result;
                 try
                 {
-                    result = await _handler.HandleSubmitAsync(sessionCtx, req, ct);
+                    result = await _handler.HandleSubmitAsync(_session, req, ct);
                 }
                 catch
                 {

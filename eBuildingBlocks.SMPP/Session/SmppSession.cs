@@ -1,13 +1,6 @@
-﻿using eBuildingBlocks.SMPP.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace eBuildingBlocks.SMPP.Session
+﻿namespace eBuildingBlocks.SMPP.Session
 {
-    public sealed class SmppSession
+    public sealed class SmppSessionContext
     {
         public Guid SessionId { get; } = Guid.NewGuid();
         public SmppSessionState State { get; set; } = SmppSessionState.Open;

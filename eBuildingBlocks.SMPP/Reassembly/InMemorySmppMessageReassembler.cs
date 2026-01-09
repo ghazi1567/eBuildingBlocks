@@ -1,5 +1,6 @@
 ﻿using eBuildingBlocks.SMPP.Models;
 using eBuildingBlocks.SMPP.Parsing;
+using eBuildingBlocks.SMPP.Session;
 using System.Collections.Concurrent;
 
 namespace eBuildingBlocks.SMPP.Reassembly
