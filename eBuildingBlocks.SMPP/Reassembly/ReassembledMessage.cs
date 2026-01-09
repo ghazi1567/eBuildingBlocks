@@ -5,11 +5,12 @@
     /// Represents a fully reassembled SMS message.
     /// </summary>
     public sealed record ReassembledMessage(
-        string SystemId,
+        ReassembledMessageMetadata Metadata,
         string SourceAddr,
         string DestinationAddr,
         byte DataCoding,
-        byte[] FullPayload
+        byte[] FullPayload,
+        string? Text
     );
-
+    
 }

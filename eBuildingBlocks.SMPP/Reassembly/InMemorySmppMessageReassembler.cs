@@ -1,4 +1,5 @@
 ﻿using eBuildingBlocks.SMPP.Models;
+using eBuildingBlocks.SMPP.Parsing;
 using System.Collections.Concurrent;
 
 namespace eBuildingBlocks.SMPP.Reassembly
@@ -28,12 +29,21 @@ namespace eBuildingBlocks.SMPP.Reassembly
             // SHORT MESSAGE → immediately complete
             if (request.Concat == null)
             {
+                var text = SmppTextDecoder.TryDecode(request.UserPayloadBytes, request.DataCoding);
                 return new ReassembledMessage(
-                    session.SystemId,
+                    new ReassembledMessageMetadata
+                    {
+                        SystemId = session.SystemId,
+                        SessionId = session.SessionId,
+                        ReceivedAtUtc = DateTime.UtcNow,
+                        ReferenceNumber = request.Concat?.Ref,
+                        TotalParts = request.Concat?.Total
+                    },
                     request.SourceAddr,
                     request.DestinationAddr,
                     request.DataCoding,
-                    request.UserPayloadBytes);
+                    request.UserPayloadBytes,
+                    text);
             }
 
             CleanupExpired();
@@ -63,16 +73,25 @@ namespace eBuildingBlocks.SMPP.Reassembly
                     .OrderBy(p => p.Key)
                     .SelectMany(p => p.Value)
                     .ToArray();
+                var text = SmppTextDecoder.TryDecode(fullPayload, request.DataCoding);
 
                 //  IMPORTANT: remove immediately after reassembly
                 _store.TryRemove(key, out _);
 
                 return new ReassembledMessage(
-                    session.SystemId,
+                    new ReassembledMessageMetadata
+                    {
+                        SystemId = session.SystemId,
+                        SessionId = session.SessionId,
+                        ReceivedAtUtc = DateTime.UtcNow,
+                        ReferenceNumber = request.Concat.Ref,
+                        TotalParts = request.Concat.Total
+                    },
                     request.SourceAddr,
                     request.DestinationAddr,
                     request.DataCoding,
-                    fullPayload);
+                    fullPayload,
+                    text);
             }
         }
 
