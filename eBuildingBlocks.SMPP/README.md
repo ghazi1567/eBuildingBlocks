@@ -1,8 +1,8 @@
-# SmppLite.Server
+# eBuildingBlocks.SMPP
 
 A **lightweight, reusable SMPP server engine** for .NET, designed to be published as a NuGet package and embedded into multiple applications.
 
-`SmppLite.Server` handles **SMPP protocol mechanics only** (TCP, PDUs, sessions, long SMS parsing) and exposes **clean extension points** so each consuming application can implement its own business logic, persistence, routing, and operator connectivity.
+`eBuildingBlocks.SMPP` handles **SMPP protocol mechanics only** (TCP, PDUs, sessions, long SMS parsing) and exposes **clean extension points** so each consuming application can implement its own business logic, persistence, routing, and operator connectivity.
 
 ---
 
@@ -44,11 +44,10 @@ A **lightweight, reusable SMPP server engine** for .NET, designed to be publishe
 - Configuration files
 - Business rules
 
-All of the above are implemented **by the consuming application**, not the NuGet.
 
 ---
 
 ## Installation
 
 ```bash
-dotnet add package SmppLite.Server
+dotnet add package eBuildingBlocks.SMPP

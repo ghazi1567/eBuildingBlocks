@@ -9,7 +9,6 @@ namespace eBuildingBlocks.SMPP
         private readonly List<IPEndPoint> _endpoints = new();
 
         private IPAddress _ipAddress = IPAddress.Any;
-        private int _port = 2775;
         private ISmppAuthenticator? _auth;
         private ISmppMessageHandler? _handler;
         private ISmppSessionPolicy? _policy;
