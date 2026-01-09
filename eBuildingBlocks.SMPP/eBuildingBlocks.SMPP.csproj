@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+	<Title>eBuildingBlocks API</Title>
+	<Authors>Inam Ul Haq</Authors>
+	<Company>https://www.linkedin.com/in/inam1567/</Company>
+	<Product>eBuildingBlocks API</Product>
+	<Description>Reusable building block for the  ecosystem. Implements core cross-cutting concerns, infrastructure, or domain utilities for .NET applications.</Description>
+	<Copyright>Copyright © linkedin/in/inam1567. All rights reserved.</Copyright>
+	<RepositoryUrl>https://github.com/ghazi1567/eBuildingBlocks</RepositoryUrl>
+	<Version>2.0.9</Version>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="" />
+	</ItemGroup>
+</Project>
