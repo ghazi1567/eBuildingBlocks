@@ -9,7 +9,7 @@ namespace eBuildingBlocks.API.Features
     public sealed class MultiTenancyOptions
     {
         public bool Enabled { get; set; } = false;
-        public string HeaderName { get; set; } = "X-TenantId";
+        public string HeaderName { get; set; } = "x-tenant-id";
         public Guid DefaultTenantId { get; set; }
     }
 }

@@ -56,6 +56,9 @@ public class TenantResolver : ICurrentUser
             var header = ctx?.Request.Headers[multiTenancy.HeaderName].FirstOrDefault();
             if (!string.IsNullOrWhiteSpace(header)) return Guid.Parse(header);
 
+            var tenantIdInClaim = _httpContextAccessor.HttpContext?.User.FindFirstValue(multiTenancy.HeaderName) ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(tenantIdInClaim)) return Guid.Parse(tenantIdInClaim);
+
             // 3) fallback default
             return multiTenancy.DefaultTenantId;
         }
