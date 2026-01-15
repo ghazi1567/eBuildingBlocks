@@ -10,57 +10,49 @@ namespace eBuildingBlocks.SMPP.Parsing
             var span = (ReadOnlySpan<byte>)pdu;
             int o = 16;
 
-            // service_type (CString)
-            _ = SmppPduReader.ReadCString(span, ref o);
+            _ = SmppPduReader.ReadCString(span, ref o); // service_type
 
-            // source_addr_ton, source_addr_npi
             o += 2;
             var sourceAddr = SmppPduReader.ReadCString(span, ref o);
 
-            // dest_addr_ton, dest_addr_npi
             o += 2;
             var destAddr = SmppPduReader.ReadCString(span, ref o);
 
-            // esm_class, protocol_id, priority_flag
             byte esmClass = span[o]; o++;
             o += 2;
 
-            // schedule_delivery_time, validity_period
             _ = SmppPduReader.ReadCString(span, ref o);
             _ = SmppPduReader.ReadCString(span, ref o);
 
-            // registered_delivery, replace_if_present_flag
             o += 2;
 
-            // data_coding
             byte dataCoding = span[o]; o++;
-
-            // sm_default_msg_id
             o += 1;
 
-            // sm_length + short_message
             byte smLen = span[o]; o++;
-            if (o + smLen > span.Length) throw new ArgumentException("Invalid short_message length.");
+            if (o + smLen > span.Length)
+                throw new ArgumentException("Invalid short_message length.");
 
             var shortMsg = span.Slice(o, smLen).ToArray();
             o += smLen;
 
-            // TLVs after short_message
             var tlvs = ParseTlvs(span, o);
 
-            // Concat detection: SAR first, then UDH
+            // STEP 1: Pick correct user data source
+            byte[] payload =
+                tlvs.TryGetValue(0x0424, out var messagePayload)
+                    ? messagePayload
+                    : shortMsg;
+
+            // STEP 2: Detect concatenation (SAR first)
             var concat = SarParser.TryParse(tlvs);
 
-            byte[] userData;
+            // STEP 3: Strip UDH if present
             if (concat is null)
             {
-                var udh = UdhParser.TryParse(esmClass, shortMsg, out var stripped);
+                var udh = UdhParser.TryParse(esmClass, payload, out var stripped);
                 concat = udh;
-                userData = stripped; // without UDH if present
-            }
-            else
-            {
-                userData = shortMsg; // SAR typically uses plain user data in short_message
+                payload = stripped;
             }
 
             return new SmppSubmitRequest(
@@ -68,10 +60,11 @@ namespace eBuildingBlocks.SMPP.Parsing
                 DestinationAddr: destAddr,
                 DataCoding: dataCoding,
                 EsmClass: esmClass,
-                UserPayloadBytes: userData,
+                UserPayloadBytes: payload,
                 Concat: concat
             );
         }
+
 
         private static Dictionary<ushort, byte[]> ParseTlvs(ReadOnlySpan<byte> span, int offset)
         {
