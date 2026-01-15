@@ -80,11 +80,18 @@ public static class AppUseExtensions
 
         return app;
     }
+    /// <summary>
+    /// This method enables authentication and authorization middlewares. along with API key authentication middleware (optional).
+    /// </summary>
+    /// <param name="app"></param>
+    /// <param name="cfg"></param>
+    /// <returns></returns>
     public static IApplicationBuilder UsingAuthorization(this IApplicationBuilder app, IConfiguration cfg)
     {
         if (!FeatureGate.Enabled(cfg, "Features:Authorization")) return app;
 
         app.UseAuthentication();
+        app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
         app.UseAuthorization();
         return app;
     }
