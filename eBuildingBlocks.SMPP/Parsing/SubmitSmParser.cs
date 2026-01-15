@@ -54,6 +54,12 @@ namespace eBuildingBlocks.SMPP.Parsing
                 concat = udh;
                 payload = stripped;
             }
+            Logger.Debug(
+    "RAW PAYLOAD (after PDU parse)",
+    payload,
+    dataCoding,
+    esmClass
+);
 
             return new SmppSubmitRequest(
                 SourceAddr: sourceAddr,

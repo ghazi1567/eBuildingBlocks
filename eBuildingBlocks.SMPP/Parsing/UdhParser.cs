@@ -4,45 +4,57 @@ namespace eBuildingBlocks.SMPP.Parsing
 {
     public static class UdhParser
     {
-        public static SmppConcatInfo? TryParse(byte esmClass, ReadOnlySpan<byte> shortMessage, out byte[] userDataWithoutUdh)
+        public static SmppConcatInfo? TryParse(
+            byte esmClass,
+            ReadOnlySpan<byte> shortMessage,
+            out byte[] userDataWithoutUdh)
         {
             userDataWithoutUdh = shortMessage.ToArray();
 
-            // UDHI flag is 0x40
-            bool udhi = (esmClass & 0x40) != 0;
-            if (!udhi || shortMessage.Length < 6) return null;
+            if ((esmClass & 0x40) == 0 || shortMessage.Length < 5)
+                return null;
 
             int udhLen = shortMessage[0];
-            if (udhLen <= 0) return null;
-            if (1 + udhLen > shortMessage.Length) return null;
+            int udhEnd = 1 + udhLen;
 
-            // Strip UDH: [UDHL][UDH bytes...][User data...]
-            userDataWithoutUdh = shortMessage.Slice(1 + udhLen).ToArray();
+            if (udhLen <= 0 || udhEnd > shortMessage.Length)
+                return null;
+
+            // Strip UDH
+            userDataWithoutUdh = shortMessage.Slice(udhEnd).ToArray();
 
             int i = 1;
-            int end = 1 + udhLen;
-
-            while (i + 1 < end)
+            while (i + 1 < udhEnd)
             {
                 byte iei = shortMessage[i++];
                 byte ielen = shortMessage[i++];
-                if (i + ielen > shortMessage.Length) break;
 
-                // 8-bit ref: IEI 0x00 length 0x03 [ref][total][seq]
+                if (i + ielen > udhEnd)
+                    break;
+
+                // 8-bit reference
                 if (iei == 0x00 && ielen == 0x03)
                 {
                     int refNum = shortMessage[i];
                     int total = shortMessage[i + 1];
                     int seq = shortMessage[i + 2];
+
+                    if (total <= 0 || seq <= 0 || seq > total)
+                        return null;
+
                     return new SmppConcatInfo(refNum, total, seq, "UDH-8");
                 }
 
-                // 16-bit ref: IEI 0x08 length 0x04 [refMSB][refLSB][total][seq]
+                // 16-bit reference
                 if (iei == 0x08 && ielen == 0x04)
                 {
                     int refNum = (shortMessage[i] << 8) | shortMessage[i + 1];
                     int total = shortMessage[i + 2];
                     int seq = shortMessage[i + 3];
+
+                    if (total <= 0 || seq <= 0 || seq > total)
+                        return null;
+
                     return new SmppConcatInfo(refNum, total, seq, "UDH-16");
                 }
 
