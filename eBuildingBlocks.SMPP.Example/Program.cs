@@ -15,7 +15,9 @@ var server = SmppServerBuilder.Create()
     .ListenOn(2776)
     .ListenOn(IPAddress.Loopback, 5000)
     .WithAuthenticator(authContext =>
-        Task.FromResult(authContext.SystemId == authContext.Password))
+    {
+        return Task.FromResult(SmppAuthResult.Valid());
+    })
     .WithMessageHandler(async (session, request, ct) =>
     {
         var msg = reassembler.TryAddPart(session, request);
@@ -33,13 +35,24 @@ var server = SmppServerBuilder.Create()
 
         return new SmppSubmitResult(
             Guid.NewGuid().ToString("N")[..16],
-            SmppCommandStatus.OK);
+            SmppCommandStatus.ESME_ROK);
     })
     .WithSessionPolicy(opt =>
     {
-        opt.CanBind = _ => true;
-        opt.CanSubmit = s => s.InFlightSubmits < 50;
-        opt.MaxInFlightPerSession = 50;
+        opt.GetMaxInFlight = session => 50;
+        // Validate each submit_sm
+        opt.ValidateSubmit = (session, request) =>
+        {
+            if (session.InFlightSubmits >= 50)
+            {
+                return SmppPolicyResult.Deny((uint)SmppCommandStatus.ESME_RTHROTTLED);
+            }
+
+            return SmppPolicyResult.Allow();
+        };
+
+        // Optional: restrict multiple binds per system_id
+        opt.AllowMultipleBinds = systemId => false;
     })
     .Build();
 

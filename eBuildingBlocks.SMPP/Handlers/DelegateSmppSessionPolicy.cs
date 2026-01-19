@@ -10,24 +10,38 @@ namespace eBuildingBlocks.SMPP.Handlers
 
         public DelegateSmppSessionPolicy(SmppSessionPolicyOptions options)
         {
-            _options = options;
+            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
-        public bool CanBind(string systemId)
+        public int GetMaxInFlight(SmppSessionContext session)
         {
-            return _options.CanBind?.Invoke(systemId) ?? true;
+            return _options.GetMaxInFlight?.Invoke(session)
+                   ?? int.MaxValue; // default: unlimited
         }
 
-        public bool CanSubmit(SmppSessionContext session)
+        public bool AllowMultipleBinds(string systemId)
         {
-            return _options.CanSubmit?.Invoke(session) ?? true;
+            return _options.AllowMultipleBinds?.Invoke(systemId)
+                   ?? false; // default: single bind only
         }
 
-        public int MaxInFlightPerSession
+        public SmppPolicyResult ValidateBind(
+            SmppAuthContext authContext,
+            SmppSessionContext session)
         {
-            get { return _options.MaxInFlightPerSession ?? int.MaxValue; }
+            return _options.ValidateBind?.Invoke(authContext, session)
+                   ?? SmppPolicyResult.Allow();
+        }
+
+        public SmppPolicyResult ValidateSubmit(
+            SmppSessionContext session,
+            SmppSubmitRequest request)
+        {
+            return _options.ValidateSubmit?.Invoke(session, request)
+                   ?? SmppPolicyResult.Allow();
         }
     }
+
 
 
 }

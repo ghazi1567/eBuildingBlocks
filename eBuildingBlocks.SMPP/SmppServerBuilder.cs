@@ -55,15 +55,15 @@ namespace eBuildingBlocks.SMPP
             return this;
         }
 
-        public SmppServerBuilder WithAuthenticator(Func<SmppAuthContext, Task<bool>> authenticator)
+        public SmppServerBuilder WithAuthenticator(Func<SmppAuthContext, Task<SmppAuthResult>> authenticator)
         {
             _auth = new DelegateSmppAuthenticator(authenticator);
             return this;
         }
 
-        public SmppServerBuilder WithAuthenticator(Func<string, string, SmppSessionContext, bool> authenticator)
+        public SmppServerBuilder WithAuthenticator(Func<SmppAuthContext, SmppAuthResult> authenticator)
         {
-            _auth = new DelegateSmppAuthenticator(ctx => Task.FromResult(authenticator(ctx.SystemId, ctx.Password, ctx.Session)));
+            _auth = new DelegateSmppAuthenticator(ctx => Task.FromResult(authenticator(ctx)));
 
             return this;
         }

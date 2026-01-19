@@ -11,22 +11,24 @@ namespace eBuildingBlocks.SMPP.Handlers
     public sealed class SmppSessionPolicyOptions
     {
         /// <summary>
-        /// Called when a client attempts to bind.
-        /// Default: allow all.
+        /// Validate bind request (credentials, system_type, IP, etc.)
         /// </summary>
-        public Func<string, bool>? CanBind { get; set; }
+        public Func<SmppAuthContext, SmppSessionContext, SmppPolicyResult>? ValidateBind { get; set; }
 
         /// <summary>
-        /// Called for every submit_sm.
-        /// Default: allow all.
+        /// Validate submit_sm (rate limits, sender rules, content, etc.)
         /// </summary>
-        public Func<SmppSessionContext, bool>? CanSubmit { get; set; }
+        public Func<SmppSessionContext, SmppSubmitRequest, SmppPolicyResult>? ValidateSubmit { get; set; }
 
         /// <summary>
-        /// Max concurrent in-flight submits per session.
-        /// Default: unlimited.
+        /// Control concurrent in-flight submits per session
         /// </summary>
-        public int? MaxInFlightPerSession { get; set; }
+        public Func<SmppSessionContext, int>? GetMaxInFlight { get; set; }
+
+        /// <summary>
+        /// Allow or deny multiple binds for same system_id
+        /// </summary>
+        public Func<string, bool>? AllowMultipleBinds { get; set; }
     }
 
 }

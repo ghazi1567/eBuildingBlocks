@@ -10,14 +10,14 @@ namespace eBuildingBlocks.SMPP.Handlers
 {
     internal sealed class DelegateSmppAuthenticator : ISmppAuthenticator
     {
-        private readonly Func<SmppAuthContext, Task<bool>> _auth;
+        private readonly Func<SmppAuthContext, Task<SmppAuthResult>> _auth;
 
-        public DelegateSmppAuthenticator(Func<SmppAuthContext, Task<bool>> auth)
+        public DelegateSmppAuthenticator(Func<SmppAuthContext, Task<SmppAuthResult>> auth)
         {
             _auth = auth;
         }
 
-        public Task<bool> AuthenticateAsync(SmppAuthContext context) => _auth(context);
+        public Task<SmppAuthResult> AuthenticateAsync(SmppAuthContext context) => _auth(context);
     }
 
 }
