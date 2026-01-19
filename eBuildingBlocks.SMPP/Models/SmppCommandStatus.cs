@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace eBuildingBlocks.SMPP.Models
+﻿namespace eBuildingBlocks.SMPP.Models
 {
     /// <summary>
     /// Minimal SMPP status set used by this lite server.
@@ -12,18 +6,42 @@ namespace eBuildingBlocks.SMPP.Models
     /// </summary>
     public enum SmppCommandStatus : uint
     {
-        OK = 0x00000000,
+        // Success
+        ESME_ROK = 0x00000000, // No Error
 
-        // Common bind errors
-        BIND_FAIL = 0x0000000D,          // ESME_RBINDFAIL
-        INVALID_BIND_STATE = 0x00000005, // ESME_RINVBNDSTS
+        // Message / PDU format errors
+        ESME_RINVMSGLEN = 0x00000001, // Message length is invalid
+        ESME_RINVCMDLEN = 0x00000002, // Command length is invalid
+        ESME_RINVCMDID = 0x00000003, // Invalid command ID
+        ESME_RINVPRTFLG = 0x00000006, // Invalid priority flag
+        ESME_RINVREGDLVFLG = 0x00000007, // Invalid registered delivery flag
+        ESME_RINVOPTPARSTREAM = 0x0000000C, // Invalid optional parameter stream
+        ESME_RINVOPTPARVAL = 0x0000000D, // Invalid optional parameter value
 
-        // Flow control
-        THROTTLED = 0x00000058,          // ESME_RTHROTTLED
+        // Bind related errors
+        ESME_RINVBNDSTS = 0x00000004, // Incorrect bind status
+        ESME_RALYBND = 0x00000005, // ESME already bound
+        ESME_RINVPASWD = 0x0000000E, // Invalid password
+        ESME_RINVSYSID = 0x0000000F, // Invalid system_id
+        ESME_RBINDFAIL = 0x0000000D, // Bind failed
 
-        // Generic
-        SYS_ERROR = 0x00000008,          // ESME_RSYSERR
-        INVALID_CMD_ID = 0x00000003      // ESME_RINVCMDID
+        // Address errors
+        ESME_RINVSRCADR = 0x0000000A, // Invalid source address
+        ESME_RINVDSTADR = 0x0000000B, // Invalid destination address
+
+        // Message submission errors
+        ESME_RMSGQFUL = 0x00000014, // Message queue full
+        ESME_RINVNUMDESTS = 0x00000033, // Invalid number of destinations
+        ESME_RINVDLNAME = 0x00000034, // Invalid distribution list name
+        ESME_RSUBMITFAIL = 0x00000045, // submit_sm failed
+
+        // Throttling
+        ESME_RTHROTTLED = 0x00000058, // Throttling error
+
+        // System / internal errors
+        ESME_RSYSERR = 0x00000008, // System error
+        ESME_RUNKNOWNERR = 0x000000FF  // Unknown error
     }
+
 
 }

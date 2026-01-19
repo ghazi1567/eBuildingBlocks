@@ -6,6 +6,7 @@ using eBuildingBlocks.SMPP.Session;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,9 +28,17 @@ namespace eBuildingBlocks.SMPP.Tcp
         {
             _tcp = tcp;
             _stream = tcp.GetStream();
+
+            var remote = (IPEndPoint)tcp.Client.RemoteEndPoint!;
+            var local = (IPEndPoint)tcp.Client.LocalEndPoint!;
+            _session.RemoteIp = remote.Address;
+            _session.LocalPort = local.Port;
+
+          
             _auth = auth;
             _handler = handler;
             _policy = policy;
+           
         }
 
         public async Task RunAsync(CancellationToken ct)
@@ -68,8 +77,10 @@ namespace eBuildingBlocks.SMPP.Tcp
         {
             switch (h.CommandId)
             {
+                case SmppCommandIds.bind_receiver:
+                case SmppCommandIds.bind_transmitter:
                 case SmppCommandIds.bind_transceiver:
-                    await HandleBindTrxAsync(h, pdu, ct);
+                    await HandleBindAsync(h, pdu, ct);
                     return;
 
                 case SmppCommandIds.enquire_link:
@@ -87,13 +98,15 @@ namespace eBuildingBlocks.SMPP.Tcp
 
                 default:
                     // Unknown: respond with invalid cmd id
-                    await WriteAsync(SmppPduWriter.BuildResponse(h.CommandId | 0x80000000, (uint)SmppCommandStatus.INVALID_CMD_ID, h.Sequence, ReadOnlySpan<byte>.Empty), ct);
+                    await WriteAsync(SmppPduWriter.BuildResponse(h.CommandId | 0x80000000, (uint)SmppCommandStatus.ESME_RINVCMDID, h.Sequence, ReadOnlySpan<byte>.Empty), ct);
                     return;
             }
         }
 
-        private async Task HandleBindTrxAsync(SmppHeader h, byte[] pdu, CancellationToken ct)
+        private async Task HandleBindAsync(SmppHeader h, byte[] pdu, CancellationToken ct)
         {
+
+            var respId = ToBindRespId(h.CommandId);
             // Body begins at 16
             var span = (ReadOnlySpan<byte>)pdu;
             int o = 16;
@@ -101,65 +114,137 @@ namespace eBuildingBlocks.SMPP.Tcp
             string systemId = SmppPduReader.ReadCString(span, ref o);
             string password = SmppPduReader.ReadCString(span, ref o);
 
-            // system_type (ignored)
-            _ = SmppPduReader.ReadCString(span, ref o);
+            string systemType = SmppPduReader.ReadCString(span, ref o);
 
-            // Optional: interface_version, addr_ton, addr_npi, address_range exist after this,
-            // but for "Lite" we accept and ignore remaining fields.
+            byte interfaceVersion = SmppPduReader.ReadByte(span, ref o);
+            byte addrTon = SmppPduReader.ReadByte(span, ref o);
+            byte addrNpi = SmppPduReader.ReadByte(span, ref o);
+            string addressRange = SmppPduReader.ReadCString(span, ref o);
 
-            if (!_policy.CanBind(systemId))
+            if (_session.State != SmppSessionState.Open)
             {
-                var body = SmppPduWriter.CString("");
-                await WriteAsync(SmppPduWriter.BuildResponse(SmppCommandIds.bind_transceiver_resp, (uint)SmppCommandStatus.BIND_FAIL, h.Sequence, body), ct);
+                await WriteAsync(
+                    SmppPduWriter.BuildResponse(
+                        respId,
+                        (uint)SmppCommandStatus.ESME_RALYBND,
+                        h.Sequence,
+                        SmppPduWriter.CString("")),
+                    ct);
                 return;
             }
+
+           
             var authContext = new SmppAuthContext(
                   systemId,
                   password,
-                  _session
+                  ToBindMode(h.CommandId),
+                  string.IsNullOrWhiteSpace(systemType) ? null : systemType,
+                  interfaceVersion,
+                  _session.RemoteIp,
+                  _session.LocalPort
               );
 
-            bool ok = await _auth.AuthenticateAsync(authContext);
-            if (!ok)
+            SmppAuthResult result;
+            try
+            {
+                result = await _auth.AuthenticateAsync(authContext);
+            }
+            catch
             {
                 var body = SmppPduWriter.CString("");
-                await WriteAsync(SmppPduWriter.BuildResponse(SmppCommandIds.bind_transceiver_resp, (uint)SmppCommandStatus.BIND_FAIL, h.Sequence, body), ct);
+                await WriteAsync(SmppPduWriter.BuildResponse(respId, (uint)SmppCommandStatus.ESME_RSYSERR, h.Sequence, body), ct);
+                return;
+            }
+
+            if (!result.Success)
+            {
+                var body = SmppPduWriter.CString("");
+                await WriteAsync(
+                    SmppPduWriter.BuildResponse(
+                        respId, // is not it should be according to GetBindMode
+                        result.CommandStatus,
+                        h.Sequence,
+                        body),
+                    ct);
+
+                return;
+            }
+
+            var policyResult = _policy.ValidateBind(authContext, _session);
+
+            if (!policyResult.Allowed)
+            {
+                await WriteAsync(
+                    SmppPduWriter.BuildResponse(
+                        respId,
+                        policyResult.CommandStatus,
+                        h.Sequence,
+                        SmppPduWriter.CString("")),
+                    ct);
                 return;
             }
 
             _session.SystemId = systemId;
-            _session.State = SmppSessionState.BoundTrx;
+            _session.BindMode = authContext.RequestedBindMode;
+            _session.InterfaceVersion = result.InterfaceVersion != 0
+                ? result.InterfaceVersion
+                : interfaceVersion;
+            if (_session.InterfaceVersion < 0x34)
+            {
+                await WriteAsync(
+                    SmppPduWriter.BuildResponse(
+                        respId,
+                        (uint)SmppCommandStatus.ESME_RSYSERR,
+                        h.Sequence,
+                        SmppPduWriter.CString("")),
+                    ct);
+                return;
+            }
+
+            _session.State = authContext.RequestedBindMode switch
+            {
+                SmppBindMode.Transmitter => SmppSessionState.BoundTx,
+                SmppBindMode.Receiver => SmppSessionState.BoundRx,
+                _ => SmppSessionState.BoundTrx
+            };
+
+            _session.AddrTon = result.AddrTon != 0 ? result.AddrTon : addrTon;
+            
+
+
+
 
             // bind_resp has system_id (server name)
             var respBody = SmppPduWriter.CString("SmppLiteServer");
-            await WriteAsync(SmppPduWriter.BuildResponse(SmppCommandIds.bind_transceiver_resp, 0, h.Sequence, respBody), ct);
+            await WriteAsync(SmppPduWriter.BuildResponse(respId, 0, h.Sequence, respBody), ct);
         }
 
         private async Task HandleSubmitSmAsync(SmppHeader h, byte[] pdu, CancellationToken ct)
         {
-            if (_session.State != SmppSessionState.BoundTrx || string.IsNullOrEmpty(_session.SystemId))
+            if (string.IsNullOrEmpty(_session.SystemId) || (_session.State != SmppSessionState.BoundTrx && _session.State != SmppSessionState.BoundTx))
             {
                 var body = SmppPduWriter.CString("");
-                await WriteAsync(SmppPduWriter.BuildResponse(SmppCommandIds.submit_sm_resp, (uint)SmppCommandStatus.INVALID_BIND_STATE, h.Sequence, body), ct);
+                await WriteAsync(
+                    SmppPduWriter.BuildResponse(
+                        SmppCommandIds.submit_sm_resp,
+                        (uint)SmppCommandStatus.ESME_RINVBNDSTS,
+                        h.Sequence,
+                        body),
+                    ct);
                 return;
             }
 
-
-            if (!_policy.CanSubmit(_session))
-            {
-                var body = SmppPduWriter.CString("");
-                await WriteAsync(SmppPduWriter.BuildResponse(SmppCommandIds.submit_sm_resp, (uint)SmppCommandStatus.THROTTLED, h.Sequence, body), ct);
-                return;
-            }
 
             // In-flight enforcement
             int inFlight = Interlocked.Increment(ref _session.InFlightSubmits);
             try
             {
-                if (inFlight > _policy.MaxInFlightPerSession)
+                var maxInFlight = _policy.GetMaxInFlight(_session);
+
+                if (inFlight > maxInFlight)
                 {
                     var body = SmppPduWriter.CString("");
-                    await WriteAsync(SmppPduWriter.BuildResponse(SmppCommandIds.submit_sm_resp, (uint)SmppCommandStatus.THROTTLED, h.Sequence, body), ct);
+                    await WriteAsync(SmppPduWriter.BuildResponse(SmppCommandIds.submit_sm_resp, (uint)SmppCommandStatus.ESME_RTHROTTLED, h.Sequence, body), ct);
                     return;
                 }
 
@@ -171,10 +256,21 @@ namespace eBuildingBlocks.SMPP.Tcp
                 catch
                 {
                     var body = SmppPduWriter.CString("");
-                    await WriteAsync(SmppPduWriter.BuildResponse(SmppCommandIds.submit_sm_resp, (uint)SmppCommandStatus.SYS_ERROR, h.Sequence, body), ct);
+                    await WriteAsync(SmppPduWriter.BuildResponse(SmppCommandIds.submit_sm_resp, (uint)SmppCommandStatus.ESME_RSYSERR, h.Sequence, body), ct);
                     return;
                 }
-
+                var policyResult = _policy.ValidateSubmit(_session, req);
+                if (!policyResult.Allowed)
+                {
+                    await WriteAsync(
+                        SmppPduWriter.BuildResponse(
+                            SmppCommandIds.submit_sm_resp,
+                            policyResult.CommandStatus,
+                            h.Sequence,
+                            SmppPduWriter.CString("")),
+                        ct);
+                    return;
+                }
                 SmppSubmitResult result;
                 try
                 {
@@ -184,7 +280,7 @@ namespace eBuildingBlocks.SMPP.Tcp
                 {
                     // Handler failure should not crash the session; return SYS_ERROR.
                     var body = SmppPduWriter.CString("");
-                    await WriteAsync(SmppPduWriter.BuildResponse(SmppCommandIds.submit_sm_resp, (uint)SmppCommandStatus.SYS_ERROR, h.Sequence, body), ct);
+                    await WriteAsync(SmppPduWriter.BuildResponse(SmppCommandIds.submit_sm_resp, (uint)SmppCommandStatus.ESME_RSYSERR, h.Sequence, body), ct);
                     return;
                 }
 
@@ -202,6 +298,22 @@ namespace eBuildingBlocks.SMPP.Tcp
         {
             await _stream.WriteAsync(data, ct);
         }
+
+        private static SmppBindMode ToBindMode(uint commandId) => commandId switch
+        {
+            SmppCommandIds.bind_transmitter => SmppBindMode.Transmitter,
+            SmppCommandIds.bind_receiver => SmppBindMode.Receiver,
+            SmppCommandIds.bind_transceiver => SmppBindMode.Transceiver,
+            _ => throw new InvalidOperationException("Not a bind command")
+        };
+
+        private static uint ToBindRespId(uint commandId) => commandId switch
+        {
+            SmppCommandIds.bind_transmitter => SmppCommandIds.bind_transmitter_resp,
+            SmppCommandIds.bind_receiver => SmppCommandIds.bind_receiver_resp,
+            SmppCommandIds.bind_transceiver => SmppCommandIds.bind_transceiver_resp,
+            _ => commandId | 0x80000000
+        };
 
     }
 

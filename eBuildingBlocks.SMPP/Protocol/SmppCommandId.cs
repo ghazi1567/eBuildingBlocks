@@ -2,6 +2,12 @@
 {
     public static class SmppCommandIds
     {
+        public const uint bind_receiver = 0x00000001;
+        public const uint bind_receiver_resp = 0x80000001;
+
+        public const uint bind_transmitter = 0x00000002;
+        public const uint bind_transmitter_resp = 0x80000002;
+
         public const uint bind_transceiver = 0x00000009;
         public const uint bind_transceiver_resp = 0x80000009;
 

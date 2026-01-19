@@ -6,7 +6,7 @@ namespace eBuildingBlocks.SMPP.Abstractions
     {
         //Task<bool> AuthenticateAsync(string systemId, string password, CancellationToken ct);
 
-        Task<bool> AuthenticateAsync(SmppAuthContext context);
+        Task<SmppAuthResult> AuthenticateAsync(SmppAuthContext context);
 
     }
 

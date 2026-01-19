@@ -1,4 +1,7 @@
-﻿namespace eBuildingBlocks.SMPP.Session
+﻿using eBuildingBlocks.SMPP.Abstractions;
+using System.Net;
+
+namespace eBuildingBlocks.SMPP.Session
 {
     public sealed class SmppSessionContext
     {
@@ -7,6 +10,12 @@
         public string? SystemId { get; set; }
 
         public int InFlightSubmits; // updated atomically
+        public byte AddrTon; // updated atomically
+        public IPAddress RemoteIp;
+        public int LocalPort;
+        public SmppBindMode BindMode;
+        public byte InterfaceVersion;
+
     }
 
 

@@ -35,6 +35,15 @@ namespace eBuildingBlocks.SMPP.Protocol
 
         public static ushort ReadU16(ReadOnlySpan<byte> s)
             => (ushort)((s[0] << 8) | s[1]);
+
+        public static byte ReadByte(ReadOnlySpan<byte> buffer, ref int offset)
+        {
+            if (offset >= buffer.Length)
+                throw new IndexOutOfRangeException("PDU buffer overflow");
+
+            return buffer[offset++];
+        }
+
     }
 
 }
