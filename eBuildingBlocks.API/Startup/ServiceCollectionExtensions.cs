@@ -168,6 +168,8 @@ public static class ServiceCollectionExtensions
                 Scheme = "bearer"
             });
 
+            
+
             c.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
                 {
@@ -179,6 +181,28 @@ public static class ServiceCollectionExtensions
                         In = ParameterLocation.Header
                     },
                     new List<string>()
+                }
+            });
+
+            c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+            {
+                Description = "API Key authentication using X-API-KEY header",
+                Type = SecuritySchemeType.ApiKey,
+                Name = "X-API-KEY",
+                In = ParameterLocation.Header
+            });
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "ApiKey"
+                        }
+                    },
+                    Array.Empty<string>()
                 }
             });
         });
