@@ -170,7 +170,7 @@ namespace eBuildingBlocks.SMPP.Tcp
                 return;
             }
 
-            var policyResult = _policy.ValidateBind(authContext, _session);
+            var policyResult = await _policy.ValidateBind(authContext, _session);
 
             if (!policyResult.Allowed)
             {
@@ -239,7 +239,7 @@ namespace eBuildingBlocks.SMPP.Tcp
             int inFlight = Interlocked.Increment(ref _session.InFlightSubmits);
             try
             {
-                var maxInFlight = _policy.GetMaxInFlight(_session);
+                var maxInFlight = await _policy.GetMaxInFlight(_session);
 
                 if (inFlight > maxInFlight)
                 {
@@ -259,7 +259,7 @@ namespace eBuildingBlocks.SMPP.Tcp
                     await WriteAsync(SmppPduWriter.BuildResponse(SmppCommandIds.submit_sm_resp, (uint)SmppCommandStatus.ESME_RSYSERR, h.Sequence, body), ct);
                     return;
                 }
-                var policyResult = _policy.ValidateSubmit(_session, req);
+                var policyResult = await _policy.ValidateSubmit(_session, req);
                 if (!policyResult.Allowed)
                 {
                     await WriteAsync(

@@ -9,11 +9,11 @@ namespace eBuildingBlocks.SMPP.Abstractions
         /// <summary>
         /// For consumers to enforce backpressure; Core increments/decrements in-flight submits.
         /// </summary>
-        int GetMaxInFlight(SmppSessionContext session);
+        Task<int> GetMaxInFlight(SmppSessionContext session);
 
-        bool AllowMultipleBinds(string systemId);
-        SmppPolicyResult ValidateBind(SmppAuthContext authContext,SmppSessionContext session);
-        SmppPolicyResult ValidateSubmit( SmppSessionContext session, SmppSubmitRequest request );
+        Task<bool> AllowMultipleBinds(string systemId);
+        Task<SmppPolicyResult> ValidateBind(SmppAuthContext authContext,SmppSessionContext session);
+        Task<SmppPolicyResult> ValidateSubmit( SmppSessionContext session, SmppSubmitRequest request );
     }
 
 }

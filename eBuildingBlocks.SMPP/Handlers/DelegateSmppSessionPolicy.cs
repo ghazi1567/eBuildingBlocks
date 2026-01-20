@@ -13,33 +13,44 @@ namespace eBuildingBlocks.SMPP.Handlers
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
-        public int GetMaxInFlight(SmppSessionContext session)
+        public async Task<int> GetMaxInFlight(SmppSessionContext session)
         {
-            return _options.GetMaxInFlight?.Invoke(session)
-                   ?? int.MaxValue; // default: unlimited
+            if (_options.GetMaxInFlight is null)
+                return 10;
+
+            return await _options.GetMaxInFlight(session);
+
         }
 
-        public bool AllowMultipleBinds(string systemId)
+        public async Task<bool> AllowMultipleBinds(string systemId)
         {
-            return _options.AllowMultipleBinds?.Invoke(systemId)
-                   ?? false; // default: single bind only
+            if (_options.AllowMultipleBinds is null)
+                return false;
+
+            return await _options.AllowMultipleBinds(systemId);
         }
 
-        public SmppPolicyResult ValidateBind(
+        public async Task<SmppPolicyResult> ValidateBind(
             SmppAuthContext authContext,
             SmppSessionContext session)
         {
-            return _options.ValidateBind?.Invoke(authContext, session)
-                   ?? SmppPolicyResult.Allow();
+            if (_options.ValidateBind is null)
+                return SmppPolicyResult.Allow();
+
+            return await _options.ValidateBind(authContext, session);
         }
 
-        public SmppPolicyResult ValidateSubmit(
+        public async Task<SmppPolicyResult> ValidateSubmit(
             SmppSessionContext session,
             SmppSubmitRequest request)
         {
-            return _options.ValidateSubmit?.Invoke(session, request)
-                   ?? SmppPolicyResult.Allow();
+            if (_options.ValidateSubmit is null)
+                return SmppPolicyResult.Allow();
+
+            return await _options.ValidateSubmit(session, request);
         }
+
+
     }
 
 

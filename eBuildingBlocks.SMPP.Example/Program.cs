@@ -39,20 +39,21 @@ var server = SmppServerBuilder.Create()
     })
     .WithSessionPolicy(opt =>
     {
-        opt.GetMaxInFlight = session => 50;
-        // Validate each submit_sm
-        opt.ValidateSubmit = (session, request) =>
+        opt.ValidateSubmit = async (session, request) =>
         {
-            if (session.InFlightSubmits >= 50)
-            {
-                return SmppPolicyResult.Deny((uint)SmppCommandStatus.ESME_RTHROTTLED);
-            }
-
             return SmppPolicyResult.Allow();
         };
-
-        // Optional: restrict multiple binds per system_id
-        opt.AllowMultipleBinds = systemId => false;
+        opt.AllowMultipleBinds = async (systemId) => {
+            return false;
+        };
+        opt.GetMaxInFlight = async session =>
+        {
+            return 50;
+        };
+        opt.ValidateBind = async (session, request) =>
+        {
+            return SmppPolicyResult.Allow();
+        };
     })
     .Build();
 
