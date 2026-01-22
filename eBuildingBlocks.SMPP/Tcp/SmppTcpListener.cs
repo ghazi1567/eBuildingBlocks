@@ -28,6 +28,7 @@ namespace eBuildingBlocks.SMPP.Tcp
 
         public async Task StartAsync(CancellationToken ct)
         {
+            Logger.Debug(this.GetType().Name, "StartAsync");
             var bindRegistry = _sp.GetRequiredService<IBindRegistry>();
             var policy = _sp.GetRequiredService<ISmppSessionPolicy>();
 

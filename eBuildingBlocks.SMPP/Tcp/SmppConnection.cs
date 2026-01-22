@@ -43,6 +43,8 @@ namespace eBuildingBlocks.SMPP.Tcp
 
         public async Task RunAsync(CancellationToken ct)
         {
+
+            Logger.Debug(this.GetType().Name, "Run");
             var buf = new byte[64 * 1024];
 
             try
@@ -79,6 +81,7 @@ namespace eBuildingBlocks.SMPP.Tcp
 
         private async Task DispatchAsync(SmppHeader h, byte[] pdu, CancellationToken ct)
         {
+            Logger.Debug(this.GetType().Name, "Dispatch");
             switch (h.CommandId)
             {
                 case SmppCommandIds.bind_receiver:
@@ -110,7 +113,7 @@ namespace eBuildingBlocks.SMPP.Tcp
 
         private async Task HandleBindAsync(SmppHeader h, byte[] pdu, CancellationToken ct)
         {
-
+            Logger.Debug(this.GetType().Name, "Bind");
             var respId = ToBindRespId(h.CommandId);
             // Body begins at 16
             var span = (ReadOnlySpan<byte>)pdu;
@@ -158,6 +161,7 @@ namespace eBuildingBlocks.SMPP.Tcp
             try
             {
                 result = await _auth.AuthenticateAsync(authContext);
+                Logger.Debug(this.GetType().Name, $"Auth Result : {result.Success}");
             }
             catch
             {
@@ -185,6 +189,7 @@ namespace eBuildingBlocks.SMPP.Tcp
 
             if (!policyResult.Allowed)
             {
+                Logger.Debug(this.GetType().Name, $"policyResult : {policyResult.Allowed}");
                 await WriteAsync(
                     SmppPduWriter.BuildResponse(
                         respId,
@@ -206,7 +211,7 @@ namespace eBuildingBlocks.SMPP.Tcp
             };
             _bindRegistry.Register(_session);
 
-
+            Logger.Debug(this.GetType().Name, $"Completed Dispatch");
             // bind_resp has system_id (server name)
             var respBody = SmppPduWriter.CString("SmppLiteServer");
             await WriteAsync(SmppPduWriter.BuildResponse(respId, 0, h.Sequence, respBody), ct);

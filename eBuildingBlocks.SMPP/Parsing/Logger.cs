@@ -1,4 +1,4 @@
-﻿namespace eBuildingBlocks.SMPP.Parsing
+﻿namespace eBuildingBlocks.SMPP
 {
     public static class Logger
     {
@@ -11,6 +11,12 @@
             Console.WriteLine($"payload_len : {payload.Length}");
             Console.WriteLine("HEX         : " + BitConverter.ToString(payload));
         }
-
+        public static void Debug(string stage, string message)
+        {
+            Console.WriteLine("=================================");
+            Console.WriteLine($"[{stage}]");
+            Console.WriteLine($"message : {message}");
+            Console.WriteLine("=================================");
+        }
     }
 }

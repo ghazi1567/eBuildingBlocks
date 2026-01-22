@@ -15,6 +15,7 @@ namespace eBuildingBlocks.SMPP
 
         public async Task StartAsync(CancellationToken ct)
         {
+            Logger.Debug(this.GetType().Name, "StartAsync");
             var tasks = _listeners
                 .Select(l => l.StartAsync(ct))
                 .ToArray();
