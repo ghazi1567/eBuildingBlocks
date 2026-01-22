@@ -12,10 +12,13 @@
 	<Description>Reusable building block for the  ecosystem. Implements core cross-cutting concerns, infrastructure, or domain utilities for .NET applications.</Description>
 	<Copyright>Copyright © linkedin/in/inam1567. All rights reserved.</Copyright>
 	<RepositoryUrl>https://github.com/ghazi1567/eBuildingBlocks</RepositoryUrl>
-	<Version>2.0.2</Version>
+	<Version>3.0.0</Version>
 	<PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 	<ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="" />
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.7" />
 	</ItemGroup>
 </Project>

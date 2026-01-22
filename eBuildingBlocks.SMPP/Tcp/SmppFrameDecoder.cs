@@ -29,11 +29,7 @@ public sealed class SmppFrameDecoder
 
         // sanity check (DO NOT THROW)
         if (pduLength < 16 || pduLength > 1024 * 1024)
-        {
-            // protocol error → drop connection gracefully
-            _length = 0;
-            return false;
-        }
+            throw new InvalidOperationException($"Invalid SMPP PDU length: {pduLength}");
 
         if (_length < pduLength)
             return false;

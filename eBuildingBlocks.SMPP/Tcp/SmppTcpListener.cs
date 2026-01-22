@@ -1,11 +1,12 @@
-﻿using System;
+﻿using eBuildingBlocks.SMPP.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using eBuildingBlocks.SMPP.Abstractions;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
+using System.Threading.Tasks;
 namespace eBuildingBlocks.SMPP.Tcp
 {
   
@@ -16,18 +17,20 @@ namespace eBuildingBlocks.SMPP.Tcp
         private readonly IPEndPoint _endpoint;
         private readonly ISmppAuthenticator _auth;
         private readonly ISmppMessageHandler _handler;
-        private readonly ISmppSessionPolicy _policy;
-
-        public SmppTcpListener(IPEndPoint endpoint, ISmppAuthenticator auth, ISmppMessageHandler handler, ISmppSessionPolicy policy)
+        private readonly IServiceProvider _sp;
+        public SmppTcpListener(IPEndPoint endpoint, IServiceProvider serviceProvider,ISmppAuthenticator auth, ISmppMessageHandler handler)
         {
             _endpoint = endpoint;
             _auth = auth;
             _handler = handler;
-            _policy = policy;
+            _sp = serviceProvider;
         }
 
         public async Task StartAsync(CancellationToken ct)
         {
+            var bindRegistry = _sp.GetRequiredService<IBindRegistry>();
+            var policy = _sp.GetRequiredService<ISmppSessionPolicy>();
+
             var listener = new TcpListener(_endpoint);
             listener.Start();
 
@@ -36,7 +39,7 @@ namespace eBuildingBlocks.SMPP.Tcp
                 var tcp = await listener.AcceptTcpClientAsync(ct);
                 _ = Task.Run(() =>
                 {
-                    var conn = new SmppConnection(tcp, _auth, _handler, _policy);
+                    var conn = new SmppConnection(tcp, _auth, _handler, policy, bindRegistry);
                     return conn.RunAsync(ct);
                 }, ct);
             }

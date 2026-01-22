@@ -14,7 +14,6 @@ namespace eBuildingBlocks.SMPP
         private IPAddress _ipAddress = IPAddress.Any;
         private ISmppAuthenticator? _auth;
         private ISmppMessageHandler? _handler;
-        private ISmppSessionPolicy? _policy;
         public delegate Task<bool> SmppAuthenticateDelegate(ISmppAuthenticator context);
         private SmppServerBuilder() { }
 
@@ -68,17 +67,6 @@ namespace eBuildingBlocks.SMPP
             return this;
         }
 
-        public SmppServerBuilder WithAuthenticator(ISmppAuthenticator authenticator)
-        {
-            _auth = authenticator;
-            return this;
-        }
-
-        public SmppServerBuilder WithMessageHandler(ISmppMessageHandler handler)
-        {
-            _handler = handler;
-            return this;
-        }
 
         public SmppServerBuilder WithMessageHandler(Func<SmppSessionContext, SmppSubmitRequest, CancellationToken, Task<SmppSubmitResult>> handler)
         {
@@ -87,31 +75,15 @@ namespace eBuildingBlocks.SMPP
         }
 
 
-        public SmppServerBuilder WithSessionPolicy(ISmppSessionPolicy policy)
-        {
-            _policy = policy;
-            return this;
-        }
-
-        public SmppServerBuilder WithSessionPolicy(Action<SmppSessionPolicyOptions> configure)
-        {
-            var options = new SmppSessionPolicyOptions();
-            configure(options);
-
-            _policy = new DelegateSmppSessionPolicy(options);
-            return this;
-        }
-
-        public SmppServer Build()
+        public SmppServer Build(IServiceProvider serviceProvider)
         {
             if (_auth is null) throw new InvalidOperationException("Authenticator is required.");
             if (_handler is null) throw new InvalidOperationException("MessageHandler is required.");
-            if (_policy is null) throw new InvalidOperationException("SessionPolicy is required.");
             if (_endpoints.Count == 0) throw new InvalidOperationException("At least one endpoint is required.");
 
             var listeners = _endpoints
              .Distinct()
-             .Select(ep => new SmppTcpListener(ep, _auth, _handler, _policy))
+             .Select(ep => new SmppTcpListener(ep, serviceProvider, _auth, _handler))
              .ToList();
 
             return new SmppServer(listeners);

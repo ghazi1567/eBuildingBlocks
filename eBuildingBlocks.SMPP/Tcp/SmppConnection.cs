@@ -23,8 +23,8 @@ namespace eBuildingBlocks.SMPP.Tcp
         private readonly ISmppAuthenticator _auth;
         private readonly ISmppMessageHandler _handler;
         private readonly ISmppSessionPolicy _policy;
-
-        public SmppConnection(TcpClient tcp, ISmppAuthenticator auth, ISmppMessageHandler handler, ISmppSessionPolicy policy)
+        private readonly IBindRegistry _bindRegistry;
+        public SmppConnection(TcpClient tcp, ISmppAuthenticator auth, ISmppMessageHandler handler, ISmppSessionPolicy policy, IBindRegistry bindRegistry)
         {
             _tcp = tcp;
             _stream = tcp.GetStream();
@@ -34,11 +34,11 @@ namespace eBuildingBlocks.SMPP.Tcp
             _session.RemoteIp = remote.Address;
             _session.LocalPort = local.Port;
 
-          
+
             _auth = auth;
             _handler = handler;
             _policy = policy;
-           
+            _bindRegistry = bindRegistry;
         }
 
         public async Task RunAsync(CancellationToken ct)
@@ -62,12 +62,14 @@ namespace eBuildingBlocks.SMPP.Tcp
                     }
                 }
             }
-            catch
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
             {
-                // swallow; consumer can add logging around server level if desired
+                throw;
             }
             finally
             {
+                _bindRegistry.Unregister(_session);
                 _session.State = SmppSessionState.Closed;
                 _tcp.Close();
             }
@@ -88,6 +90,7 @@ namespace eBuildingBlocks.SMPP.Tcp
                     return;
 
                 case SmppCommandIds.unbind:
+                    _bindRegistry.Unregister(_session);
                     await WriteAsync(SmppPduWriter.BuildResponse(SmppCommandIds.unbind_resp, 0, h.Sequence, ReadOnlySpan<byte>.Empty), ct);
                     _session.State = SmppSessionState.Closed;
                     return;
@@ -133,7 +136,11 @@ namespace eBuildingBlocks.SMPP.Tcp
                 return;
             }
 
-           
+            _session.AddrTon = addrTon;
+            _session.AddrNpi = addrNpi;
+            _session.AddressRange = addressRange;
+
+
             var authContext = new SmppAuthContext(
                   systemId,
                   password,
@@ -141,7 +148,8 @@ namespace eBuildingBlocks.SMPP.Tcp
                   string.IsNullOrWhiteSpace(systemType) ? null : systemType,
                   interfaceVersion,
                   _session.RemoteIp,
-                  _session.LocalPort
+                  _session.LocalPort,
+                  _session
               );
 
             SmppAuthResult result;
@@ -169,6 +177,7 @@ namespace eBuildingBlocks.SMPP.Tcp
 
                 return;
             }
+            _session.Policy = result.Policy;
 
             var policyResult = await _policy.ValidateBind(authContext, _session);
 
@@ -186,32 +195,14 @@ namespace eBuildingBlocks.SMPP.Tcp
 
             _session.SystemId = systemId;
             _session.BindMode = authContext.RequestedBindMode;
-            _session.InterfaceVersion = result.InterfaceVersion != 0
-                ? result.InterfaceVersion
-                : interfaceVersion;
-            if (_session.InterfaceVersion < 0x34)
-            {
-                await WriteAsync(
-                    SmppPduWriter.BuildResponse(
-                        respId,
-                        (uint)SmppCommandStatus.ESME_RSYSERR,
-                        h.Sequence,
-                        SmppPduWriter.CString("")),
-                    ct);
-                return;
-            }
-
+         
             _session.State = authContext.RequestedBindMode switch
             {
                 SmppBindMode.Transmitter => SmppSessionState.BoundTx,
                 SmppBindMode.Receiver => SmppSessionState.BoundRx,
                 _ => SmppSessionState.BoundTrx
             };
-
-            _session.AddrTon = result.AddrTon != 0 ? result.AddrTon : addrTon;
-            
-
-
+            _bindRegistry.Register(_session);
 
 
             // bind_resp has system_id (server name)

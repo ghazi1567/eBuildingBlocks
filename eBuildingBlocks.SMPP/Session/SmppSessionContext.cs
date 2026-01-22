@@ -1,4 +1,5 @@
 ﻿using eBuildingBlocks.SMPP.Abstractions;
+using eBuildingBlocks.SMPP.Models;
 using System.Net;
 
 namespace eBuildingBlocks.SMPP.Session
@@ -9,12 +10,16 @@ namespace eBuildingBlocks.SMPP.Session
         public SmppSessionState State { get; set; } = SmppSessionState.Open;
         public string? SystemId { get; set; }
 
-        public int InFlightSubmits; // updated atomically
-        public byte AddrTon; // updated atomically
-        public IPAddress RemoteIp;
+        public int InFlightSubmits;
+        public byte AddrTon; 
+        public byte AddrNpi;
+        public string? AddressRange;
+        public IPAddress? RemoteIp;
         public int LocalPort;
         public SmppBindMode BindMode;
         public byte InterfaceVersion;
+
+        public SmppAccountPolicy? Policy { get; set; }
 
     }
 

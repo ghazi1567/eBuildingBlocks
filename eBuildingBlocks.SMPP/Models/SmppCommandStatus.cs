@@ -40,7 +40,11 @@
 
         // System / internal errors
         ESME_RSYSERR = 0x00000008, // System error
-        ESME_RUNKNOWNERR = 0x000000FF  // Unknown error
+        ESME_RUNKNOWNERR = 0x000000FF,  // Unknown error
+
+        ESME_RINVCODING,
+        ESME_RINVSYSTYP
+
     }
 
 

@@ -17,7 +17,17 @@ namespace eBuildingBlocks.SMPP.Handlers
             _auth = auth;
         }
 
-        public Task<SmppAuthResult> AuthenticateAsync(SmppAuthContext context) => _auth(context);
+        public async Task<SmppAuthResult> AuthenticateAsync(SmppAuthContext context)
+        {
+            var result = await _auth(context);
+
+            if (result.Success && result.Policy != null)
+            {
+                context.Session.Policy = result.Policy; 
+            }
+
+            return result;
+        }
     }
 
 }

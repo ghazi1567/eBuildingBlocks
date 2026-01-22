@@ -9,7 +9,7 @@
         string SourceAddr,
         string DestinationAddr,
         byte DataCoding,
-        byte[] FullPayload,
+        ReadOnlyMemory<byte> FullPayload,
         string? Text
     );
     

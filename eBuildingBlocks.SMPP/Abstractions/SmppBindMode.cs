@@ -2,9 +2,10 @@
 {
     public enum SmppBindMode
     {
-        Transmitter,     // TX
-        Receiver,        // RX
-        Transceiver      // TRX
+        None = 0,
+        Transmitter = 1,     // TX
+        Receiver = 2,        // RX
+        Transceiver = 3     // TRX
     }
 
 }

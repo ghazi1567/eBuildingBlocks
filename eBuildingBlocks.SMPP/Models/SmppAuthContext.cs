@@ -11,7 +11,8 @@ namespace eBuildingBlocks.SMPP.Models
         string? SystemType,
         byte InterfaceVersion,
         IPAddress RemoteIp,
-        int LocalPort
+        int LocalPort,
+        SmppSessionContext Session
      );
 
 }

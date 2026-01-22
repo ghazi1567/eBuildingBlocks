@@ -7,12 +7,21 @@ using System.Threading.Tasks;
 namespace eBuildingBlocks.SMPP.Models
 {
     public sealed record SmppSubmitRequest(
-        string SourceAddr,
-        string DestinationAddr,
+        byte SourceAddrTon,
+        byte SourceAddrNpi,
+        string SourceAddress,
+
+        byte DestAddrTon,
+        byte DestAddrNpi,
+        string DestinationAddress,
+
         byte DataCoding,
         byte EsmClass,
-        byte[] UserPayloadBytes,
+        byte RegisteredDelivery,
+
+        ReadOnlyMemory<byte> UserPayloadBytes,
         SmppConcatInfo? Concat
+
     );
 
 }

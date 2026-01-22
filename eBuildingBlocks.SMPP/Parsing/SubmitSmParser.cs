@@ -8,34 +8,63 @@ namespace eBuildingBlocks.SMPP.Parsing
         public static SmppSubmitRequest Parse(byte[] pdu)
         {
             var span = (ReadOnlySpan<byte>)pdu;
-            int o = 16;
+            int o = 16; // Skip SMPP header
 
-            _ = SmppPduReader.ReadCString(span, ref o); // service_type
+            // service_type
+            _ = SmppPduReader.ReadCString(span, ref o);
 
-            o += 2;
+            // source_addr_ton / npi
+            byte sourceTon = span[o++];
+            byte sourceNpi = span[o++];
+
+            // source_addr
             var sourceAddr = SmppPduReader.ReadCString(span, ref o);
 
-            o += 2;
+            // dest_addr_ton / npi
+            byte destTon = span[o++];
+            byte destNpi = span[o++];
+
+            // destination_addr
             var destAddr = SmppPduReader.ReadCString(span, ref o);
 
-            byte esmClass = span[o]; o++;
-            o += 2;
+            // esm_class
+            byte esmClass = span[o++];
 
+            // protocol_id (ignored)
+            o++;
+
+            // priority_flag (ignored)
+            o++;
+
+            // schedule_delivery_time
             _ = SmppPduReader.ReadCString(span, ref o);
+
+            // validity_period
             _ = SmppPduReader.ReadCString(span, ref o);
 
-            o += 2;
+            // registered_delivery
+            byte registeredDelivery = span[o++];
 
-            byte dataCoding = span[o]; o++;
-            o += 1;
+            // replace_if_present_flag (ignored)
+            o++;
 
-            byte smLen = span[o]; o++;
+            // data_coding
+            byte dataCoding = span[o++];
+
+            // sm_default_msg_id (ignored)
+            o++;
+
+            // sm_length
+            byte smLen = span[o++];
+
             if (o + smLen > span.Length)
                 throw new ArgumentException("Invalid short_message length.");
 
+            // short_message
             var shortMsg = span.Slice(o, smLen).ToArray();
             o += smLen;
 
+            // TLVs
             var tlvs = ParseTlvs(span, o);
 
             // STEP 1: Pick correct user data source
@@ -44,7 +73,7 @@ namespace eBuildingBlocks.SMPP.Parsing
                     ? messagePayload
                     : shortMsg;
 
-            // STEP 2: Detect concatenation (SAR first)
+            // STEP 2: Detect concatenation (SAR TLVs first)
             var concat = SarParser.TryParse(tlvs);
 
             // STEP 3: Strip UDH if present
@@ -54,23 +83,24 @@ namespace eBuildingBlocks.SMPP.Parsing
                 concat = udh;
                 payload = stripped;
             }
-            Logger.Debug(
-    "RAW PAYLOAD (after PDU parse)",
-    payload,
-    dataCoding,
-    esmClass
-);
 
             return new SmppSubmitRequest(
-                SourceAddr: sourceAddr,
-                DestinationAddr: destAddr,
+                SourceAddrTon: sourceTon,
+                SourceAddrNpi: sourceNpi,
+                SourceAddress: sourceAddr,
+
+                DestAddrTon: destTon,
+                DestAddrNpi: destNpi,
+                DestinationAddress: destAddr,
+
                 DataCoding: dataCoding,
                 EsmClass: esmClass,
+                RegisteredDelivery: registeredDelivery,
+
                 UserPayloadBytes: payload,
                 Concat: concat
             );
         }
-
 
         private static Dictionary<ushort, byte[]> ParseTlvs(ReadOnlySpan<byte> span, int offset)
         {
@@ -83,7 +113,8 @@ namespace eBuildingBlocks.SMPP.Parsing
                 ushort len = SmppPduReader.ReadU16(span.Slice(o + 2, 2));
                 o += 4;
 
-                if (o + len > span.Length) break;
+                if (o + len > span.Length)
+                    break;
 
                 tlvs[tag] = span.Slice(o, len).ToArray();
                 o += len;
@@ -92,5 +123,4 @@ namespace eBuildingBlocks.SMPP.Parsing
             return tlvs;
         }
     }
-
 }

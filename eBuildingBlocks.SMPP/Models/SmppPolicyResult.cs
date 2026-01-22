@@ -10,7 +10,7 @@ namespace eBuildingBlocks.SMPP.Models
     {
         public bool Allowed { get; init; }
         public uint CommandStatus { get; init; }
-
+        
         public static SmppPolicyResult Allow() =>
             new() { Allowed = true, CommandStatus = (uint)SmppCommandStatus.ESME_ROK };
 
