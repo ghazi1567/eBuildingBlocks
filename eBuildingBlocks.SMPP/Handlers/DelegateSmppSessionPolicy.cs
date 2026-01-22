@@ -4,7 +4,7 @@ using eBuildingBlocks.SMPP.Session;
 
 namespace eBuildingBlocks.SMPP.Handlers
 {
-    internal sealed class DelegateSmppSessionPolicy : ISmppSessionPolicy
+    internal sealed class DelegateSmppSessionPolicy 
     {
         private readonly SmppSessionPolicyOptions _options;
 

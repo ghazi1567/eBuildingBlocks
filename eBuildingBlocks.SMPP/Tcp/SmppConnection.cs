@@ -183,13 +183,14 @@ namespace eBuildingBlocks.SMPP.Tcp
 
                 return;
             }
+            Logger.Debug(this.GetType().Name, $"result.Policy is null : {result.Policy is null}");
             _session.Policy = result.Policy;
-
+            Logger.Debug(this.GetType().Name, $"before Bind ");
             var policyResult = await _policy.ValidateBind(authContext, _session);
-
+            Logger.Debug(this.GetType().Name, $"policyResult : {policyResult.Allowed}");
             if (!policyResult.Allowed)
             {
-                Logger.Debug(this.GetType().Name, $"policyResult : {policyResult.Allowed}");
+                
                 await WriteAsync(
                     SmppPduWriter.BuildResponse(
                         respId,

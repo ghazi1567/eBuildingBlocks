@@ -27,9 +27,12 @@ namespace eBuildingBlocks.SMPP.Handlers
             SmppSubmitRequest request)
         {
             var policy = session.Policy;
+
+            Logger.Debug(this.GetType().Name, $"policy is null : {policy is null}");
+
             if (policy == null)
                 return Task.FromResult(
-                    SmppPolicyResult.Deny((uint)SmppCommandStatus.ESME_RINVSYSID));
+                    SmppPolicyResult.Allow());
 
             foreach (var rule in _submitRules)
             {
@@ -45,6 +48,7 @@ namespace eBuildingBlocks.SMPP.Handlers
             SmppAuthContext authContext,
             SmppSessionContext session)
         {
+            Logger.Debug(this.GetType().Name, $"ValidateBind : ");
             foreach (var rule in _bindRules)
             {
                 var decision = rule.Evaluate(authContext, session, session.Policy);
