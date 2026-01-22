@@ -80,6 +80,7 @@ namespace eBuildingBlocks.SMPP
             if (_auth is null) throw new InvalidOperationException("Authenticator is required.");
             if (_handler is null) throw new InvalidOperationException("MessageHandler is required.");
             if (_endpoints.Count == 0) throw new InvalidOperationException("At least one endpoint is required.");
+            if (serviceProvider is null) throw new InvalidOperationException("Service Provider is required.");
 
             var listeners = _endpoints
              .Distinct()

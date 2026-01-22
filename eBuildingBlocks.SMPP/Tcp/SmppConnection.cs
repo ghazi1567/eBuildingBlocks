@@ -62,7 +62,9 @@ namespace eBuildingBlocks.SMPP.Tcp
                     }
                 }
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException) {
+                throw;
+            }
             catch (Exception ex)
             {
                 throw;

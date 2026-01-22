@@ -17,7 +17,7 @@ services.RegistarSMPPCore();
 
 services.AddSingleton<ISmppAuthenticator, TestSmppAuthenticator>();
 services.AddSingleton<ISmppMessageHandler, TestSmppMessageHandler>();
-services.AddSingleton<ISmppSessionPolicy, DefaultSmppSessionPolicy>();
+//services.AddSingleton<ISmppSessionPolicy, DefaultSmppSessionPolicy>();
 
 var provider = services.BuildServiceProvider();
 

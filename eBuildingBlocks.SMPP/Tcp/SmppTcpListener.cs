@@ -31,6 +31,10 @@ namespace eBuildingBlocks.SMPP.Tcp
             var bindRegistry = _sp.GetRequiredService<IBindRegistry>();
             var policy = _sp.GetRequiredService<ISmppSessionPolicy>();
 
+            if (policy is null) throw new InvalidOperationException("Service Provider is note providing required.");
+            if (bindRegistry is null) throw new InvalidOperationException("Service Provider is note providing BindRegistary.");
+
+
             var listener = new TcpListener(_endpoint);
             listener.Start();
 
