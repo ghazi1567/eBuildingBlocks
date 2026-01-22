@@ -18,7 +18,7 @@ namespace eBuildingBlocks.SMPP.Session
         public int LocalPort;
         public SmppBindMode BindMode;
         public byte InterfaceVersion;
-
+        public DateTime LastActivityUtc { get; set; } = DateTime.UtcNow;
         public SmppAccountPolicy? Policy { get; set; }
 
     }

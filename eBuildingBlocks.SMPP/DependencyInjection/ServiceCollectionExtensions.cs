@@ -1,4 +1,5 @@
 ﻿using eBuildingBlocks.SMPP.Abstractions;
+using eBuildingBlocks.SMPP.BackgroundJobs;
 using eBuildingBlocks.SMPP.Handlers;
 using eBuildingBlocks.SMPP.Reassembly;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,8 +36,6 @@ namespace eBuildingBlocks.SMPP
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IBindRule, SystemTypeRule>());
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IBindRule, IpAllowRule>());
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IBindRule, MaxBindRule>());
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<IBindRule, DuplicateBindRule>());
-
 
 
             // ======================
@@ -50,7 +49,9 @@ namespace eBuildingBlocks.SMPP
             services.TryAddEnumerable(ServiceDescriptor.Singleton<ISubmitRule, ConcatenationRule>());
             services.TryAddEnumerable(ServiceDescriptor.Singleton<ISubmitRule, RegisteredDeliveryRule>());
 
+            services.AddHostedService<SmppSessionCleanupJob>();
             return services;
         }
+
     }
 }

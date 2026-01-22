@@ -44,6 +44,13 @@ namespace eBuildingBlocks.SMPP.Models
         // DLR
         public bool AllowRegisteredDelivery { get; init; } = true;
 
+        public int IdleTimeoutMin { get; set; } = 10;
+
+        /// <summary>
+        /// Cleanup Interval in milliseconds
+        /// </summary>
+        public int CleanupInterval { get; set; } = 20000;
+
 
     }
 }

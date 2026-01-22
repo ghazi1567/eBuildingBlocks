@@ -27,9 +27,6 @@ namespace eBuildingBlocks.SMPP.Handlers
             SmppSubmitRequest request)
         {
             var policy = session.Policy;
-
-            Logger.Debug(this.GetType().Name, $"policy is null : {policy is null}");
-
             if (policy == null)
                 return Task.FromResult(
                     SmppPolicyResult.Allow());
@@ -48,7 +45,6 @@ namespace eBuildingBlocks.SMPP.Handlers
             SmppAuthContext authContext,
             SmppSessionContext session)
         {
-            Logger.Debug(this.GetType().Name, $"ValidateBind : ");
             foreach (var rule in _bindRules)
             {
                 var decision = rule.Evaluate(authContext, session, session.Policy);

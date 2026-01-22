@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace eBuildingBlocks.SMPP.Tcp
 {
@@ -183,23 +184,26 @@ namespace eBuildingBlocks.SMPP.Tcp
 
                 return;
             }
-            Logger.Debug(this.GetType().Name, $"result.Policy is null : {result.Policy is null}");
-            _session.Policy = result.Policy;
-            Logger.Debug(this.GetType().Name, $"before Bind ");
-            var policyResult = await _policy.ValidateBind(authContext, _session);
-            Logger.Debug(this.GetType().Name, $"policyResult : {policyResult.Allowed}");
-            if (!policyResult.Allowed)
+
+            if (result.Policy != null)
             {
-                
-                await WriteAsync(
-                    SmppPduWriter.BuildResponse(
-                        respId,
-                        policyResult.CommandStatus,
-                        h.Sequence,
-                        SmppPduWriter.CString("")),
-                    ct);
-                return;
+                _session.Policy = result.Policy;
+                var policyResult = await _policy.ValidateBind(authContext, _session);
+                if (!policyResult.Allowed)
+                {
+
+                    await WriteAsync(
+                        SmppPduWriter.BuildResponse(
+                            respId,
+                            policyResult.CommandStatus,
+                            h.Sequence,
+                            SmppPduWriter.CString("")),
+                        ct);
+                    return;
+                }
             }
+          
+            
 
             _session.SystemId = systemId;
             _session.BindMode = authContext.RequestedBindMode;
@@ -212,7 +216,7 @@ namespace eBuildingBlocks.SMPP.Tcp
             };
             _bindRegistry.Register(_session);
 
-            Logger.Debug(this.GetType().Name, $"Completed Dispatch");
+        
             // bind_resp has system_id (server name)
             var respBody = SmppPduWriter.CString("SmppLiteServer");
             await WriteAsync(SmppPduWriter.BuildResponse(respId, 0, h.Sequence, respBody), ct);
@@ -220,6 +224,8 @@ namespace eBuildingBlocks.SMPP.Tcp
 
         private async Task HandleSubmitSmAsync(SmppHeader h, byte[] pdu, CancellationToken ct)
         {
+            _session.LastActivityUtc = DateTime.UtcNow;
+
             if (string.IsNullOrEmpty(_session.SystemId) || (_session.State != SmppSessionState.BoundTrx && _session.State != SmppSessionState.BoundTx))
             {
                 var body = SmppPduWriter.CString("");
