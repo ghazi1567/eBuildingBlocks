@@ -13,8 +13,8 @@ namespace eBuildingBlocks.SMPP.Models
         public byte? MaxInterfaceVersion { get; init; } = 0x34; // optional
         public string[] AllowedSystemTypes { get; init; } = Array.Empty<string>(); // empty => allow all
 
-        public int MaxBindsPerSystemId { get; init; } = 1;
-        public int MaxBindsPerIp { get; init; } = 5;
+        public int MaxBindsPerSystemId { get; init; } = 10;
+        public int MaxBindsPerIp { get; init; } = 50;
 
         // IP allow list (supports exact IP and CIDR)
         public string[] AllowedIpRules { get; init; } = Array.Empty<string>(); // e.g. ["8.213.45.132", "10.0.0.0/24"]
@@ -39,10 +39,10 @@ namespace eBuildingBlocks.SMPP.Models
         public HashSet<byte> AllowedDataCodings { get; init; } = new() { 0, 8 }; // 0=default, 8=UCS2
         public int MaxBodyBytes { get; init; } = 140; // for a single PDU payload without SAR/UDH; tune for your server
         public bool AllowConcatenation { get; init; } = true;
-        public bool RequireUdhiForUdhPayload { get; init; } = true;
+        public bool RequireUdhiForUdhPayload { get; init; } = false;
 
         // DLR
-        public bool AllowRegisteredDelivery { get; init; } = true;
+        public bool AllowRegisteredDelivery { get; init; } = false;
 
         public int IdleTimeoutMin { get; set; } = 10;
 
