@@ -9,6 +9,7 @@ namespace eBuildingBlocks.SMPP.Models
 
         // Bind
         public SmppBindMode AllowedBindModes { get; init; } = SmppBindMode.Transceiver;
+        public int AllowedPort { get; init; } = 2775;
         public byte MinInterfaceVersion { get; init; } = 0x34; // SMPP 3.4
         public byte? MaxInterfaceVersion { get; init; } = 0x34; // optional
         public string[] AllowedSystemTypes { get; init; } = Array.Empty<string>(); // empty => allow all

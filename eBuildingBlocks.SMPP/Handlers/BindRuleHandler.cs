@@ -28,6 +28,10 @@ namespace eBuildingBlocks.SMPP.Handlers
             if (policy.AllowedBindModes != ctx.RequestedBindMode)
                 return PolicyDecision.Deny((uint)SmppCommandStatus.ESME_RINVBNDSTS, "Bind mode not allowed");
 
+
+            if (policy.AllowedPort != ctx.LocalPort)
+                return PolicyDecision.Deny((uint)SmppCommandStatus.ESME_RINVBNDSTS, "Request port not allowed");
+
             return PolicyDecision.Allow();
         }
     }
@@ -38,13 +42,13 @@ namespace eBuildingBlocks.SMPP.Handlers
         {
             if (ctx.InterfaceVersion < policy.MinInterfaceVersion)
                 return PolicyDecision.Deny(
-                    (uint)SmppCommandStatus.ESME_RSYSERR,
+                    (uint)SmppCommandStatus.ESME_RINVBNDSTS,
                     "Interface version too low");
 
             if (policy.MaxInterfaceVersion.HasValue &&
                 ctx.InterfaceVersion > policy.MaxInterfaceVersion.Value)
                 return PolicyDecision.Deny(
-                    (uint)SmppCommandStatus.ESME_RSYSERR,
+                    (uint)SmppCommandStatus.ESME_RINVBNDSTS,
                     "Interface version too high");
 
             return PolicyDecision.Allow();
