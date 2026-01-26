@@ -130,18 +130,6 @@ namespace eBuildingBlocks.SMPP.Tcp
             byte addrNpi = SmppPduReader.ReadByte(span, ref o);
             string addressRange = SmppPduReader.ReadCString(span, ref o);
 
-            if (_session.State != SmppSessionState.Open)
-            {
-                await WriteAsync(
-                    SmppPduWriter.BuildResponse(
-                        respId,
-                        (uint)SmppCommandStatus.ESME_RALYBND,
-                        h.Sequence,
-                        SmppPduWriter.CString("")),
-                    ct);
-                return;
-            }
-
             _session.AddrTon = addrTon;
             _session.AddrNpi = addrNpi;
             _session.AddressRange = addressRange;
