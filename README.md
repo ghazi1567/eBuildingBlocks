@@ -29,8 +29,11 @@ eBuildingBlocks/
 - **Audit Logging**: Automatic audit trail for all entity changes
 
 #### Key Components:
-- `BaseEntity`: Abstract base class with audit fields (CreatedAt, UpdatedAt, IsDeleted, etc.)
-- `Entity<TKey>`: Generic entity interface with tenant support
+- `BaseEntity<TKey>`: Abstract base class with domain event support
+- `AuditableEntity<TKey>`: Base entity with audit fields (CreatedOn, CreatedBy, etc.)
+- `TenantEntity<TKey>`: Base entity with tenant support and audit
+- `IDomainEvent`: Interface for domain events
+- `BaseDomainEvent`: Base class for domain events
 - `IRepository<TEntity, TKey>`: Generic repository interface
 - `ICurrentUser`: Interface for current user context
 - `AuditLog`: Comprehensive audit logging model
@@ -46,7 +49,9 @@ eBuildingBlocks/
 - `ResponseModel<T>`: Standardized API response wrapper
 - `PagedList<T>`: Pagination support
 - `GlobalExceptionHandler`: Centralized exception handling
-- `EncryptionHelper`: AES encryption utilities
+- `IEventBus`: Domain event bus interface
+- `IEventHandler<TEvent>`: Event handler interface
+- `EventBusOptions`: Event bus configuration options
 - Custom exception classes for different HTTP status codes
 
 ### 3. **Infrastructure Layer** (`eBuildingBlocks.Infrastructure`)
@@ -60,8 +65,11 @@ eBuildingBlocks/
 #### Key Components:
 - `DefaultDBContext`: Base DbContext with audit support
 - `Repository<TEntity, TKey, TDbContext>`: Generic repository implementation
+- `InProcessEventBus`: In-process domain event bus implementation
 - `AuditSaveChangesInterceptor`: Automatic audit logging
 - `ModelBuilderExtensions`: Multi-tenant query filtering
+- `RepositoryExtensions`: Extension methods for event publishing
+- `EventBusExtensions`: DI registration extensions for event bus
 
 ### 4. **API Layer** (`eBuildingBlocks.API`)
 - **API Versioning**: Built-in API versioning support
@@ -124,9 +132,10 @@ eBuildingBlocks/
 - Background job processing
 
 ### **Event-Driven Architecture**
-- Asynchronous event publishing
-- Integration event patterns
-- MassTransit message bus integration
+- **Domain Events**: In-process event bus for modular monoliths
+- **Integration Events**: MassTransit-based message bus for microservices
+- **Event Handlers**: Type-safe event handling with dependency injection
+- **Automatic Event Publishing**: Events published after successful SaveChanges
 
 ## 📦 Dependencies
 
@@ -173,9 +182,21 @@ services.BaseRegister(configuration, hostBuilder);
 app.BaseAppUse(configuration);
 ```
 
-### **4. Event Bus Configuration**
+### **4. Domain Event Bus Configuration**
 ```csharp
-// Configure MassTransit
+// Register in-process event bus for domain events
+services.AddInProcessEventBus(options =>
+{
+    options.FailureMode = EventHandlerFailureMode.FailFast; // or Continue
+});
+
+// Register event handlers
+services.AddScoped<IEventHandler<ProductCreatedEvent>, ProductCreatedEventHandler>();
+```
+
+### **5. Integration Event Bus Configuration (MassTransit)**
+```csharp
+// Configure MassTransit for integration events (microservices)
 services.AddMassTransit(x =>
 {
     x.UsingRabbitMq((context, cfg) =>
@@ -220,17 +241,51 @@ public class UserService
 
 
 
-### **Event Publishing**
+### **Domain Events (In-Process)**
+```csharp
+// 1. Define domain event
+public record UserCreatedEvent(
+    Guid UserId,
+    string UserName,
+    Guid TenantId
+) : BaseDomainEvent(TenantId);
+
+// 2. Publish in entity
+public class User : AuditableEntity<Guid>
+{
+    public string Name { get; set; } = string.Empty;
+    
+    public void Create(string name)
+    {
+        Name = name;
+        AddDomainEvent(new UserCreatedEvent(Id, name, TenantId));
+    }
+}
+
+// 3. Create handler
+public class UserCreatedEventHandler : IEventHandler<UserCreatedEvent>
+{
+    public async Task HandleAsync(UserCreatedEvent @event, CancellationToken ct)
+    {
+        // Handle event - e.g., send welcome email
+    }
+}
+
+// 4. In repository/service - events auto-published after SaveChanges
+await _context.SaveChangesAndPublishEventsAsync(_eventBus, cancellationToken);
+```
+
+### **Integration Events (Cross-Service)**
 ```csharp
 public class UserService
 {
-    private readonly IEventPublisher _eventPublisher;
+    private readonly IEventPublisher _eventPublisher; // From eBuildingBlocks.EventBus
     
     public async Task CreateUserAsync(User user)
     {
         // Create user logic...
         
-        await _eventPublisher.PublishAsync(new UserCreatedEvent
+        await _eventPublisher.PublishAsync(new UserCreatedIntegrationEvent
         {
             UserId = user.Id,
             UserName = user.Name

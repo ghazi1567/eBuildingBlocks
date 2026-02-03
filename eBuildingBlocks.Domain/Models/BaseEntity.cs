@@ -76,8 +76,24 @@ namespace eBuildingBlocks.Domain.Models
     }
 
     /// <summary>
-    /// Marker interface for domain events (kept here for convenience).
-    /// Implement concrete events in your domain and dispatch them after SaveChanges.
+    /// Marker interface for domain events with standard properties.
+    /// All domain events must implement this interface.
     /// </summary>
-    public interface IDomainEvent { }
+    public interface IDomainEvent
+    {
+        /// <summary>
+        /// Unique identifier for the event instance.
+        /// </summary>
+        Guid EventId { get; }
+        
+        /// <summary>
+        /// Timestamp when the event occurred.
+        /// </summary>
+        DateTime OccurredAt { get; }
+        
+        /// <summary>
+        /// Tenant identifier (for multi-tenant systems).
+        /// </summary>
+        Guid? TenantId { get; }
+    }
 }

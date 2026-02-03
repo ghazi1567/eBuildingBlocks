@@ -96,19 +96,6 @@ namespace eBuildingBlocks.SMPP.Handlers
     }
 
 
-    public sealed class DuplicateBindRule : IBindRule
-    {
-        public PolicyDecision Evaluate(SmppAuthContext ctx, SmppSessionContext session, SmppAccountPolicy policy)
-        {
-            if (session.BindMode != SmppBindMode.None)
-                return PolicyDecision.Deny(
-                    (uint)SmppCommandStatus.ESME_RALYBND,
-                    "Already bound");
-
-            return PolicyDecision.Allow();
-        }
-    }
-
     public sealed class MaxBindRule : IBindRule
     {
         private readonly IBindRegistry _registry;

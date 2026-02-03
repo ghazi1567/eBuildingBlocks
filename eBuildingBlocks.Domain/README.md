@@ -332,35 +332,76 @@ public class AuditService
 
 ### Domain Events
 
-```csharp
-public class OrderCreatedEvent
-{
-    public Guid OrderId { get; set; }
-    public string OrderNumber { get; set; }
-    public Guid CustomerId { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
+Domain events are supported through the `BaseEntity<TKey>` base class. All entities inheriting from `BaseEntity<TKey>`, `AuditableEntity<TKey>`, or `TenantEntity<TKey>` automatically have domain event support.
 
-public class Order
+#### Creating Domain Events
+
+```csharp
+// Define a domain event using BaseDomainEvent
+public record ProductCreatedEvent(
+    Guid ProductId,
+    string ProductCode,
+    string Name,
+    Guid TenantId
+) : BaseDomainEvent(TenantId);
+```
+
+#### Publishing Domain Events in Entities
+
+```csharp
+public class Product : AuditableEntity<Guid>
 {
-    public event EventHandler<OrderCreatedEvent>? OrderCreated;
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
     
-    public void Confirm()
+    public void Create(string code, string name)
     {
-        Status = OrderStatus.Confirmed;
-        Updated("system");
+        Code = code;
+        Name = name;
         
-        // Raise domain event
-        OrderCreated?.Invoke(this, new OrderCreatedEvent
-        {
-            OrderId = Id,
-            OrderNumber = OrderNumber,
-            CustomerId = CustomerId,
-            CreatedAt = CreatedAt
-        });
+        // Add domain event - automatically collected and published after SaveChanges
+        AddDomainEvent(new ProductCreatedEvent(Id, code, name, TenantId));
     }
 }
 ```
+
+#### Event Handler Implementation
+
+```csharp
+// In your application layer
+public class ProductCreatedEventHandler : IEventHandler<ProductCreatedEvent>
+{
+    private readonly IPriceListService _priceListService;
+    
+    public ProductCreatedEventHandler(IPriceListService priceListService)
+    {
+        _priceListService = priceListService;
+    }
+    
+    public async Task HandleAsync(ProductCreatedEvent @event, CancellationToken cancellationToken)
+    {
+        // Handle the event - e.g., create default price list
+        await _priceListService.CreateDefaultPriceAsync(@event.ProductId);
+    }
+}
+```
+
+#### Registering Event Bus and Handlers
+
+```csharp
+// In Startup/Program.cs
+services.AddInProcessEventBus(); // Registers IEventBus
+services.AddScoped<IEventHandler<ProductCreatedEvent>, ProductCreatedEventHandler>();
+```
+
+#### Publishing Events After SaveChanges
+
+```csharp
+// In your repository or service
+await _context.SaveChangesAndPublishEventsAsync(_eventBus, cancellationToken);
+```
+
+**Note**: Domain events are automatically collected from all entities in the change tracker and published after a successful `SaveChangesAsync()`.
 
 ## Dependencies
 
