@@ -1,4 +1,6 @@
-﻿using Asp.Versioning;
+﻿using Microsoft.AspNetCore.OpenApi;
+using Microsoft.OpenApi; // Ensure this is at the very top
+using Asp.Versioning;
 using eBuildingBlocks.API.Features;
 using eBuildingBlocks.API.Helpers;
 using eBuildingBlocks.Domain.Interfaces;
@@ -9,7 +11,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.FeatureManagement;
-using Microsoft.OpenApi.Models;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using StackExchange.Redis;
@@ -30,7 +31,7 @@ public static class ServiceCollectionExtensions
             .RegisterMemoryCache(configuration)
             .RegisterRedis(configuration)
             .RegisterCurrentUser(configuration)
-            .RegisterSwagger(configuration)
+            .RegisterOpenApi(configuration)
             .RegisterCors(configuration)
             .RegisterFeatureManagement(configuration)
             .RegisterHangfire(configuration);
@@ -136,79 +137,61 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    private static IServiceCollection RegisterSwagger(this IServiceCollection services, IConfiguration cfg)
+    public static IServiceCollection RegisterOpenApi(this IServiceCollection services, IConfiguration cfg)
     {
         if (!FeatureGate.Enabled(cfg, "Features:Swagger")) return services;
 
-        var title = cfg["Features:Swagger:Title"] ?? "Project Swagger";
+        var title = cfg["Features:Swagger:Title"] ?? "Project API";
         var version = cfg["Features:Swagger:Version"] ?? "v1";
 
-        services.AddSwaggerGen(c =>
+        services.AddOpenApi(options =>
         {
-            c.SwaggerDoc(version, new OpenApiInfo
+            options.AddDocumentTransformer((document, context, ct) =>
             {
-                Title = title,
-                Version = version,
-                Description = "",
-                Contact = new OpenApiContact
+                // 1. Metadata & Contact
+                document.Info.Title = title;
+                document.Info.Version = version;
+                document.Info.Contact = new OpenApiContact
                 {
                     Name = "Inam Ul Haq",
                     Email = "inam.sys@gmail.com",
                     Url = new Uri("https://www.linkedin.com/in/inam1567/")
-                }
-            });
+                };
 
-            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-            {
-                In = ParameterLocation.Header,
-                Description = "Please insert JWT into field",
-                Name = "Authorization",
-                Type = SecuritySchemeType.Http,
-                BearerFormat = "JWT",
-                Scheme = "bearer"
-            });
+                // 2. Add Security Schemes to Components
+                document.Components ??= new OpenApiComponents();
 
-            
-
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
+                document.Components.SecuritySchemes.Add("Bearer", new OpenApiSecurityScheme
                 {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" },
-                        Scheme = "oauth2",
-                        Name = "Bearer",
-                        In = ParameterLocation.Header
-                    },
-                    new List<string>()
-                }
-            });
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    Description = "Please insert JWT into field"
+                });
 
-            c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
-            {
-                Description = "API Key authentication using X-API-KEY header",
-                Type = SecuritySchemeType.ApiKey,
-                Name = "X-API-KEY",
-                In = ParameterLocation.Header
-            });
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
+                document.Components.SecuritySchemes.Add("ApiKey", new OpenApiSecurityScheme
                 {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "ApiKey"
-                        }
-                    },
-                    Array.Empty<string>()
-                }
+                    Type = SecuritySchemeType.ApiKey,
+                    Name = "X-API-KEY",
+                    In = ParameterLocation.Header,
+                    Description = "API Key authentication using X-API-KEY header"
+                });
+
+                // 3. Apply Global Security Requirements
+                // Use 'OpenApiSecuritySchemeReference' instead of 'OpenApiReference'
+                document.Security = new List<OpenApiSecurityRequirement>
+            {
+                new() { { new OpenApiSecuritySchemeReference("Bearer"), new List<string>() } },
+                new() { { new OpenApiSecuritySchemeReference("ApiKey"), new List<string>() } }
+            };
+
+                return Task.CompletedTask;
             });
         });
 
         return services;
     }
+
 
     private static IServiceCollection RegisterCors(this IServiceCollection services, IConfiguration cfg)
     {

@@ -7,8 +7,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using Microsoft.OpenApi.Models;
 using Prometheus;
+using Scalar.AspNetCore;
 using System.Net.Http.Headers;
 using System.Text;
 
@@ -20,7 +20,7 @@ public static class AppUseExtensions
     {
         app
            .UsingCors(configuration)
-           .UsingSwagger(configuration)
+           .UsingScalar(configuration)
            .UsingHangfire(configuration)
            .UsingMetrics(configuration)
            .UsingRouting(configuration)
@@ -54,32 +54,35 @@ public static class AppUseExtensions
         return app;
     }
 
-    public static IApplicationBuilder UsingSwagger(this IApplicationBuilder app, IConfiguration cfg)
+    public static IApplicationBuilder UsingScalar(this IApplicationBuilder app, IConfiguration cfg)
     {
         if (!FeatureGate.Enabled(cfg, "Features:Swagger")) return app;
 
-        app.UseSwagger(c =>
+        if (app is WebApplication webApp)
         {
-            c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
+            // 1. Map the OpenAPI JSON
+            webApp.MapOpenApi();
+
+            // 2. Map Scalar - The prefix is now the FIRST argument!
+            var title = cfg["Features:Swagger:Title"] ?? "API";
+            var routePrefix = cfg["Features:Swagger:RoutePrefix"] ?? "scalar";
+
+            // Pass the prefix here instead of setting it in 'options'
+            webApp.MapScalarApiReference(routePrefix, options =>
             {
-                var pathBase = httpReq.Headers["X-Forwarded-Prefix"].FirstOrDefault();
-                if (!string.IsNullOrEmpty(pathBase))
-                    swaggerDoc.Servers = new List<OpenApiServer> { new() { Url = pathBase } };
+                options.WithTitle(title)
+                       .WithTheme(ScalarTheme.Moon)
+                       .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+
+                // Note: In 2.0, Scalar automatically handles the {documentName} 
+                // placeholder internally, so you just provide the base prefix.
             });
-        });
-
-        var title = cfg["Features:Swagger:Title"] ?? "API";
-        var version = cfg["Features:Swagger:Version"] ?? "v1";
-        var routePrefix = cfg["Features:Swagger:RoutePrefix"]; // "" for root
-
-        app.UseSwaggerUI(options =>
-        {
-            options.SwaggerEndpoint($"/swagger/{version}/swagger.json", $"{title} {version}");
-            if (routePrefix is not null) options.RoutePrefix = routePrefix; // null = keep default
-        });
+        }
 
         return app;
     }
+
+
     /// <summary>
     /// This method enables authentication and authorization middlewares. along with API key authentication middleware (optional).
     /// </summary>

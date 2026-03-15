@@ -49,7 +49,7 @@ public sealed class GlobalExceptionHandlerMiddleware
             (int)status, ctx.Request.Path, ctx.TraceIdentifier
         );
 
-        ctx.Response.Clear();
+        ctx.Response.Body.SetLength(0);
         ctx.Response.StatusCode = (int)status;
         ctx.Response.ContentType = "application/json; charset=utf-8";
 
