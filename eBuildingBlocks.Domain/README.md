@@ -146,27 +146,36 @@ public abstract class BaseEntity : Entity<Guid>
 }
 ```
 
-### Repository Interface
+### Repository interfaces
 
-Generic repository interface for data access:
+Persistence-agnostic read/write surface (no `IQueryable<T>` here):
 
 ```csharp
-public interface IRepository<TEntity, TKey> where TEntity : class, Entity<TKey>
+public interface IReadRepository<TEntity, TKey> where TEntity : class
 {
-    Task<bool> CommitChangesAsync(CancellationToken cancellationToken = default);
-    IQueryable<TEntity> Query();
-    Task<bool> ExistsAsync(TKey id, CancellationToken cancellationToken = default);
-    Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<TEntity?> GetByIdAsync(TKey id, CancellationToken ct = default);
+    Task<TEntity?> FirstOrDefaultAsync(ISpecification<TEntity> spec, CancellationToken ct = default);
+    Task<TEntity?> SingleOrDefaultAsync(ISpecification<TEntity> spec, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TEntity>> ListAsync(ISpecification<TEntity> spec, CancellationToken ct = default);
+    Task<IReadOnlyList<TEntity>> ListAllAsync(CancellationToken ct = default);
+    Task<int> CountAsync(ISpecification<TEntity> spec, CancellationToken ct = default);
+    Task<bool> AnyAsync(ISpecification<TEntity> spec, CancellationToken ct = default);
+}
+
+public interface IRepository<TEntity, TKey> : IReadRepository<TEntity, TKey> where TEntity : class
+{
     Task AddAsync(TEntity entity, CancellationToken cancellationToken = default);
     Task UpdateAsync(TEntity entity, CancellationToken cancellationToken = default);
     Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default);
-    
-    Task<TEntity> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> wherePredicate, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<TEntity>> ListAsync(Expression<Func<TEntity, bool>> wherePredicate, CancellationToken cancellationToken = default);
-    Task<bool> AnyAsync(Expression<Func<TEntity, bool>> wherePredicate, CancellationToken cancellationToken = default);
 }
 ```
+
+Commit with **`IUnitOfWork.SaveChangesAsync`** (interface in Domain; register an implementation such as **`DbContextUnitOfWork<TDbContext>`** from Infrastructure with the same `DbContext` scope as repositories). For EF Core **`Query()`** / `IQueryable<T>`, use **`IEfQueryableRepository<TEntity, TKey>`** in Infrastructure (or **`AsEfQueryable()`**).
+
+### Specifications
+
+- **`ISpecification<T>`** / **`SpecificationBase<T>`**: criteria, **string** navigation includes, ordering, paging — no Entity Framework references in the Domain project.
+- EF-specific **`Include`/`ThenInclude`** expressions: derive from **`EfSpecification<T>`** (`eBuildingBlocks.Infrastructure.Specifications`) and implement **`IEfSpecification<T>`**; **`SpecificationEvaluator`** applies those when present.
 
 ### Current User Interface
 
@@ -206,14 +215,14 @@ public class AuditLog : BaseEntity
 ```
 eBuildingBlocks.Domain/
 ├── Enums/
-│   └── Languages.cs
 ├── Interfaces/
 │   ├── ICurrentUser.cs
-│   └── IRepository.cs
+│   ├── IReadRepository.cs
+│   ├── IRepository.cs
+│   ├── ISpecification.cs
+│   └── IUnitOfWork.cs
 ├── Models/
-│   ├── AuditLog.cs
-│   ├── BaseEntity.cs
-│   └── Entity.cs
+├── Specifications/
 └── eBuildingBlocks.Domain.csproj
 ```
 
@@ -394,14 +403,13 @@ services.AddInProcessEventBus(); // Registers IEventBus
 services.AddScoped<IEventHandler<ProductCreatedEvent>, ProductCreatedEventHandler>();
 ```
 
-#### Publishing Events After SaveChanges
+#### Publishing domain events
 
-```csharp
-// In your repository or service
-await _context.SaveChangesAndPublishEventsAsync(_eventBus, cancellationToken);
-```
+**Transactional outbox** (Infrastructure): register `DomainOutboxSaveChangesInterceptor` and commit with `SaveChangesAsync`, `IUnitOfWork.SaveChangesAsync`, or `SaveChangesWithTransactionalOutboxAsync`. Events are written to `OutboxMessages` and cleared from aggregates only **after** a successful commit.
 
-**Note**: Domain events are automatically collected from all entities in the change tracker and published after a successful `SaveChangesAsync()`.
+**In-process only**: `SaveChangesAndPublishDomainEventsInProcessAsync` (Infrastructure.Extensions) snapshots events, saves, then publishes via `IEventBus`; it **suppresses** outbox enqueue for that call when the interceptor is registered so handlers are not duplicated.
+
+The obsolete `SaveChangesAndPublishEventsAsync` delegates to the in-process method; prefer the explicit APIs above.
 
 ## Dependencies
 

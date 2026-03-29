@@ -6,6 +6,11 @@ namespace eBuildingBlocks.Application.Events
     /// Handler interface for domain events.
     /// </summary>
     /// <typeparam name="TEvent">The type of domain event to handle.</typeparam>
+    /// <remarks>
+    /// When multiple handlers are registered for the same event type, execution order is intentionally
+    /// non-deterministic (depends on DI container iteration). Handlers must be fully independent and idempotent;
+    /// do not rely on sequencing or cross-handler state.
+    /// </remarks>
     public interface IEventHandler<in TEvent> where TEvent : IDomainEvent
     {
         /// <summary>

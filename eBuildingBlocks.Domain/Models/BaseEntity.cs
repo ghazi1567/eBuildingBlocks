@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace eBuildingBlocks.Domain.Models
 {
@@ -9,7 +9,7 @@ namespace eBuildingBlocks.Domain.Models
     /// Minimal base for all entities.
     /// Provides identity, equality, optional concurrency token, and domain events plumbing.
     /// </summary>
-    public abstract class BaseEntity<TKey> : IEquatable<BaseEntity<TKey>>, IEntity
+    public abstract class BaseEntity<TKey> : IEquatable<BaseEntity<TKey>>, IEntity, IHasDomainEvents
         where TKey : IEquatable<TKey>
     {
         /// <summary>Primary key.</summary>

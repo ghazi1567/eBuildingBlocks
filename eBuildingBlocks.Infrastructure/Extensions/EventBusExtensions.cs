@@ -12,6 +12,10 @@ namespace eBuildingBlocks.Infrastructure.Extensions
         /// <summary>
         /// Adds the in-process event bus to the service collection.
         /// </summary>
+        /// <remarks>
+        /// Multiple <see cref="IEventHandler{TEvent}"/> implementations for the same event type run in
+        /// non-deterministic order; they must be independent and idempotent.
+        /// </remarks>
         /// <param name="services">The service collection.</param>
         /// <param name="configure">Optional action to configure event bus options.</param>
         /// <returns>The service collection for chaining.</returns>

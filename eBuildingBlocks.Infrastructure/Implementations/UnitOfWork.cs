@@ -1,11 +1,12 @@
-﻿using eBuildingBlocks.Domain.Models;
+using eBuildingBlocks.Domain.Interfaces;
+using eBuildingBlocks.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Data;
 
 namespace eBuildingBlocks.Infrastructure.Implementations;
 
-public class UnitOfWork<TDbContext>(TDbContext dbContext) where TDbContext : DbContext
+public class UnitOfWork<TDbContext>(TDbContext dbContext) : IUnitOfWork where TDbContext : DbContext
 {
     public DbSet<TEntity> Entities<TEntity>()
            where TEntity : class, IEntity

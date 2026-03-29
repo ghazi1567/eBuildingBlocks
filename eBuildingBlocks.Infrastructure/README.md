@@ -65,13 +65,14 @@ public class ApplicationDbContext : DbContext
 ### 2. Register Services
 
 ```csharp
+using eBuildingBlocks.Infrastructure.Extensions;
 using eBuildingBlocks.Infrastructure.Implementations;
 
 services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
-services.AddScoped<IUnitOfWork, UnitOfWork>();
+services.AddDbContextUnitOfWork<ApplicationDbContext>();
+services.AddScoped(typeof(IRepository<,>), typeof(Repository<,,>));
 ```
 
 ### 3. Use Repository Pattern
@@ -100,7 +101,7 @@ public class ProductService
         };
         
         await _repository.AddAsync(product);
-        await _unitOfWork.CommitAsync();
+        await _unitOfWork.SaveChangesAsync();
         
         return product;
     }
@@ -109,82 +110,13 @@ public class ProductService
 
 ## Features in Detail
 
-### Repository Implementation
+### Repository implementation
 
-Generic repository implementation with full CRUD operations:
+`Repository<TEntity, TKey, TDbContext>` implements **`IRepository<TEntity, TKey>`** and **`IEfQueryableRepository<TEntity, TKey>`**. Use **`Query()`** only through the EF port (inject **`IEfQueryableRepository<,>`** or call **`AsEfQueryable()`** on `IRepository`). Specifications are composed with **`SpecificationBase<T>`** (Domain) or **`EfSpecification<T>`** (Infrastructure) when you need expression includes.
 
-```csharp
-public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> 
-    where TEntity : class, Entity<TKey>
-{
-    private readonly DbContext _context;
-    private readonly DbSet<TEntity> _dbSet;
-    
-    public Repository(DbContext context)
-    {
-        _context = context;
-        _dbSet = context.Set<TEntity>();
-    }
-    
-    public async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default)
-    {
-        return await _dbSet.FindAsync(new object[] { id }, cancellationToken);
-    }
-    
-    public async Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken cancellationToken = default)
-    {
-        return await _dbSet.ToListAsync(cancellationToken);
-    }
-    
-    public async Task AddAsync(TEntity entity, CancellationToken cancellationToken = default)
-    {
-        await _dbSet.AddAsync(entity, cancellationToken);
-    }
-    
-    public async Task<bool> CommitChangesAsync(CancellationToken cancellationToken = default)
-    {
-        return await _context.SaveChangesAsync(cancellationToken) > 0;
-    }
-    
-    // Additional methods...
-}
-```
+### Unit of work
 
-### Unit of Work Pattern
-
-Transaction management and unit of work implementation:
-
-```csharp
-public class UnitOfWork : IUnitOfWork
-{
-    private readonly DbContext _context;
-    
-    public UnitOfWork(DbContext context)
-    {
-        _context = context;
-    }
-    
-    public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
-    {
-        return await _context.SaveChangesAsync(cancellationToken);
-    }
-    
-    public async Task BeginTransactionAsync()
-    {
-        await _context.Database.BeginTransactionAsync();
-    }
-    
-    public async Task CommitTransactionAsync()
-    {
-        await _context.Database.CommitTransactionAsync();
-    }
-    
-    public async Task RollbackTransactionAsync()
-    {
-        await _context.Database.RollbackTransactionAsync();
-    }
-}
-```
+Use **`AddDbContextUnitOfWork<TDbContext>()`** and inject **`IUnitOfWork`**; **`SaveChangesAsync`** commits the shared `DbContext` (see **`DbContextUnitOfWork<TDbContext>`** in this project).
 
 ### Audit Save Changes Interceptor
 
@@ -271,13 +203,16 @@ public static class ModelBuilderExtensions
 
 ```
 eBuildingBlocks.Infrastructure/
+├── Data/
+│   └── IEfQueryableRepository.cs
 ├── Extensions/
-│   └── ModelBuilderExtensions.cs
 ├── Implementations/
-│   ├── AuditSaveChangesInterceptor.cs
 │   ├── Repository.cs
-│   ├── RepositoryProperties.cs
 │   └── UnitOfWork.cs
+├── Specifications/
+│   ├── EfSpecification.cs
+│   ├── IEfSpecification.cs
+│   └── SpecificationEvaluator.cs
 └── eBuildingBlocks.Infrastructure.csproj
 ```
 
@@ -292,19 +227,17 @@ public interface IProductRepository : IRepository<Product, Guid>
     Task<IReadOnlyList<Product>> GetByPriceRangeAsync(decimal minPrice, decimal maxPrice);
 }
 
-public class ProductRepository : Repository<Product, Guid>, IProductRepository
+public class ProductRepository : Repository<Product, Guid, ApplicationDbContext>, IProductRepository
 {
-    public ProductRepository(DbContext context) : base(context)
-    {
-    }
-    
+    public ProductRepository(ApplicationDbContext context) : base(context) { }
+
     public async Task<IReadOnlyList<Product>> GetByCategoryAsync(string category)
     {
         return await Query()
             .Where(p => p.Category == category && !p.IsDeleted)
             .ToListAsync();
     }
-    
+
     public async Task<IReadOnlyList<Product>> GetByPriceRangeAsync(decimal minPrice, decimal maxPrice)
     {
         return await Query()
@@ -317,12 +250,12 @@ public class ProductRepository : Repository<Product, Guid>, IProductRepository
 ### Multi-Tenant Repository
 
 ```csharp
-public class TenantAwareRepository<TEntity, TKey> : Repository<TEntity, TKey>
-    where TEntity : class, Entity<TKey>
+public class TenantAwareRepository<TEntity, TKey> : Repository<TEntity, TKey, ApplicationDbContext>
+    where TEntity : class, IEntity
 {
     private readonly ICurrentUser _currentUser;
-    
-    public TenantAwareRepository(DbContext context, ICurrentUser currentUser) 
+
+    public TenantAwareRepository(ApplicationDbContext context, ICurrentUser currentUser)
         : base(context)
     {
         _currentUser = currentUser;
@@ -392,7 +325,7 @@ public static class InfrastructureExtensions
         });
         
         // Register repositories
-        services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
+        services.AddScoped(typeof(IRepository<,>), typeof(Repository<,,>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         
         // Register specific repositories
@@ -505,7 +438,7 @@ public static class InfrastructureExtensions
             .AddDefaultTokenProviders();
         
         // Repositories
-        services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
+        services.AddScoped(typeof(IRepository<,>), typeof(Repository<,,>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         
         return services;

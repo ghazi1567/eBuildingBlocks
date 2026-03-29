@@ -1,6 +1,7 @@
-﻿using eBuildingBlocks.Domain.Interfaces;
+using eBuildingBlocks.Domain.Interfaces;
 using eBuildingBlocks.Domain.Models;
-using eBuildingBlocks.Domain.Specifications;
+using eBuildingBlocks.Infrastructure.Data;
+using eBuildingBlocks.Infrastructure.Specifications;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -8,7 +9,8 @@ namespace eBuildingBlocks.Infrastructure.Implementations;
 
 public class Repository<TEntity, TKey, TDbContext>(
      TDbContext dbContext
-    ) : UnitOfWork<TDbContext>(dbContext), IRepository<TEntity, TKey> where TEntity : class, IEntity where TDbContext : DbContext
+    ) : UnitOfWork<TDbContext>(dbContext), IRepository<TEntity, TKey>, IEfQueryableRepository<TEntity, TKey>
+    where TEntity : class, IEntity where TDbContext : DbContext
 {
 
     public IQueryable<TEntity> Queryable => Entities<TEntity>().AsQueryable();
@@ -33,43 +35,23 @@ public class Repository<TEntity, TKey, TDbContext>(
         await Entities<TEntity>().AddAsync(entity, cancellationToken);
     }
 
-    public async Task UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+    public Task UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-
-        await Task.Run(() =>
-        {
-            Entities<TEntity>().Update(entity);
-        }, cancellationToken);
+        Entities<TEntity>().Update(entity);
+        return Task.CompletedTask;
     }
 
-    public async Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
+    public Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        // TODO: enable this for soft delete. soft deleted record clean up pending.
-        //if (entity is BaseEntity baseEntity)
-        //{
-        //    await Task.Run(() =>
-        //    {
-        //        Entities<TEntity>().Update(entity);
-        //    }, cancellationToken);
-        //}
-
-
-        await Task.Run(() =>
-        {
-            Entities<TEntity>().Remove(entity);
-        }, cancellationToken);
+        Entities<TEntity>().Remove(entity);
+        return Task.CompletedTask;
     }
 
     public async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken ct = default)
          => await Entities<TEntity>().FindAsync(id, ct);
 
 
-    public IQueryable<TEntity> Query()
-    {
-        return SetAsNoTracking;
-    }
-
-   
+    public virtual IQueryable<TEntity> Query() => SetAsNoTracking;
 
     public async Task<TEntity?> FirstOrDefaultAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
         => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec).FirstOrDefaultAsync(ct);

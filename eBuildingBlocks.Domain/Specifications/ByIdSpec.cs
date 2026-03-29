@@ -1,9 +1,9 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 
 namespace eBuildingBlocks.Domain.Specifications
 {
 
-    public sealed class ByIdSpec<T> : Specification<T>
+    public sealed class ByIdSpec<T> : SpecificationBase<T> where T : class
     {
         private static readonly string IdPropName = "Id";
         public ByIdSpec() : this(default!) { }

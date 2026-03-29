@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.OpenApi;
+using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi; // Ensure this is at the very top
 using Asp.Versioning;
-using eBuildingBlocks.API.Features;
+using eBuildingBlocks.Common.Features;
 using eBuildingBlocks.API.Helpers;
 using eBuildingBlocks.Domain.Interfaces;
 using Hangfire;
 using Hangfire.MemoryStorage;
+using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,14 +15,17 @@ using Microsoft.FeatureManagement;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using StackExchange.Redis;
+using System.Reflection;
 using System.Text.Json.Serialization;
+using FluentValidation;
 
 namespace BuildingBlocks.API.Startup;
 
 public static class ServiceCollectionExtensions
 {
+    /// <param name="fluentValidationAssembly">When set, registers FluentValidation validators from that assembly (feature <c>Features:FluentValidation</c>, default on).</param>
     public static IServiceCollection BaseRegister(this IServiceCollection services,
-        IConfiguration configuration, IHostBuilder hostBuilder)
+        IConfiguration configuration, IHostBuilder hostBuilder, Assembly? fluentValidationAssembly = null)
     {
         // order is explicit; each method no-ops if the feature is disabled
         services
@@ -34,8 +38,21 @@ public static class ServiceCollectionExtensions
             .RegisterOpenApi(configuration)
             .RegisterCors(configuration)
             .RegisterFeatureManagement(configuration)
-            .RegisterHangfire(configuration);
+            .RegisterHangfire(configuration)
+            .RegisterFluentValidation(configuration, fluentValidationAssembly);
 
+        return services;
+    }
+
+    private static IServiceCollection RegisterFluentValidation(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        Assembly? validatorsAssembly)
+    {
+        if (validatorsAssembly is null) return services;
+        if (!FeatureGate.Enabled(configuration, "Features:FluentValidation", fallback: true)) return services;
+
+        services.AddValidatorsFromAssembly(validatorsAssembly);
         return services;
     }
 
@@ -130,7 +147,8 @@ public static class ServiceCollectionExtensions
 
     private static IServiceCollection RegisterCurrentUser(this IServiceCollection services, IConfiguration cfg)
     {
-        // Usually always on; gate only if you want to optionally remove it
+        // Options binding for hosts that inject IOptions<MultiTenancyOptions> (e.g. application handlers).
+        services.Configure<MultiTenancyOptions>(cfg.GetSection("Features:MultiTenancy"));
         services.AddHttpContextAccessor();
         services.AddSingleton<ICurrentUser, TenantResolver>();
         services.AddSingleton<ITenantScope, TenantScope>();
@@ -222,6 +240,7 @@ public static class ServiceCollectionExtensions
         if (!FeatureGate.Enabled(cfg, "Features:Hangfire")) return services;
 
         var useMem = cfg.GetValue("Features:Hangfire:UseMemoryStorage", true);
+        var sqlConnectionName = cfg["Features:Hangfire:ConnectionStringName"];
 
         services.AddHangfire(configuration =>
         {
@@ -230,8 +249,16 @@ public static class ServiceCollectionExtensions
                 .UseSimpleAssemblyNameTypeSerializer()
                 .UseDefaultTypeSerializer();
 
-            if (useMem) configuration.UseMemoryStorage();
-            // else: plug SQL/Redis/etc here based on more config keys
+            if (useMem)
+            {
+                configuration.UseMemoryStorage();
+            }
+            else if (!string.IsNullOrWhiteSpace(sqlConnectionName))
+            {
+                var cs = cfg.GetConnectionString(sqlConnectionName);
+                if (!string.IsNullOrWhiteSpace(cs))
+                    configuration.UseSqlServerStorage(cs);
+            }
         });
 
         services.AddHangfireServer();

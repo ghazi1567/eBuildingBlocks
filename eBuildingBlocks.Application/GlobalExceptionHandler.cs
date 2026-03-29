@@ -1,4 +1,4 @@
-﻿using eBuildingBlocks.Application.Exceptions;
+using eBuildingBlocks.Application.Exceptions;
 using eBuildingBlocks.Application.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -23,11 +23,15 @@ public sealed class GlobalExceptionHandlerMiddleware
     {
         try
         {
-            await _next(context);
+            await _next(context).ConfigureAwait(false);
         }
-        catch (Exception ex) // one catch only
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
         {
-            await HandleExceptionAsync(context, ex);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(context, ex).ConfigureAwait(false);
         }
     }
 
@@ -49,12 +53,13 @@ public sealed class GlobalExceptionHandlerMiddleware
             (int)status, ctx.Request.Path, ctx.TraceIdentifier
         );
 
-        ctx.Response.Body.SetLength(0);
+        TryResetResponseBody(ctx);
+
         ctx.Response.StatusCode = (int)status;
         ctx.Response.ContentType = "application/json; charset=utf-8";
 
         var payload = JsonSerializer.Serialize(response, JsonOptions);
-        await ctx.Response.WriteAsync(payload);
+        await ctx.Response.WriteAsync(payload).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -82,9 +87,9 @@ public sealed class GlobalExceptionHandlerMiddleware
             Exceptions.NotImplementedException nie
                 => (HttpStatusCode.NotImplemented, ResponseModel.Fail(nie.Error ?? "Not implemented", HttpStatusCode.NotImplemented)),
 
-            // Cancellation: surface 499 or 400; 499 is non-standard—many stick to 400
+            // Request-aborted cancellation is rethrown in Invoke; this covers cooperative cancel without abort
             OperationCanceledException
-                => (HttpStatusCode.BadRequest, ResponseModel.Fail("Request canceled", HttpStatusCode.BadRequest)),
+                => (HttpStatusCode.RequestTimeout, ResponseModel.Fail("The operation was canceled.", HttpStatusCode.RequestTimeout)),
 
             // Fallback
             _ => (HttpStatusCode.InternalServerError, ResponseModel.Fail("An unexpected error occurred.", HttpStatusCode.InternalServerError))
@@ -98,4 +103,20 @@ public sealed class GlobalExceptionHandlerMiddleware
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         WriteIndented = false
     };
+
+    private static void TryResetResponseBody(HttpContext ctx)
+    {
+        try
+        {
+            if (ctx.Response.Body.CanSeek)
+            {
+                ctx.Response.Body.SetLength(0);
+                ctx.Response.Body.Position = 0;
+            }
+        }
+        catch
+        {
+            // Ignore: non-buffered streams cannot reset
+        }
+    }
 }

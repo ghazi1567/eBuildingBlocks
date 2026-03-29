@@ -72,10 +72,11 @@ This document provides an architectural review of the proposed domain event enha
 ### 1.3 Repository Pattern
 
 **Current Implementation:**
-- `IRepository<TEntity, TKey>` interface exists
-- `Repository<TEntity, TKey, TDbContext>` implementation exists
+- `IRepository<TEntity, TKey>` / `IReadRepository<TEntity, TKey>` exist; **`SaveChangesAsync` is on `IUnitOfWork`**, not on `IRepository`
+- `Repository<TEntity, TKey, TDbContext>` implements `IRepository` and **`IEfQueryableRepository<TEntity, TKey>`** for **`Query()`** / `IQueryable<T>` (Infrastructure-only port)
+- Domain **`ISpecification<T>`** is EF-free (criteria, **string** includes, ordering, paging via **`SpecificationBase<T>`**); EF expression/chained includes use **`IEfSpecification<T>`** / **`EfSpecification<T>`** and **`SpecificationEvaluator`** in Infrastructure
 - `UnitOfWork<TDbContext>` provides `SaveChangesAsync()`
-- No automatic domain event publishing after `SaveChangesAsync()`
+- No automatic domain event publishing after `SaveChangesAsync()` (transactional outbox is documented separately; outbox rows use **`EventName`**, not a legacy `EventType` column)
 
 ---
 

@@ -10,6 +10,10 @@ namespace eBuildingBlocks.Infrastructure.Events
     /// In-process event bus implementation for modular monoliths.
     /// Uses dependency injection to resolve event handlers.
     /// </summary>
+    /// <remarks>
+    /// Handler invocation order for a given event type is intentionally non-deterministic. Handlers must be
+    /// independent and idempotent; the framework does not provide serial execution guarantees.
+    /// </remarks>
     public class InProcessEventBus : IEventBus
     {
         private readonly IServiceProvider _serviceProvider;

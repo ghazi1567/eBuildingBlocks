@@ -1,4 +1,4 @@
-﻿using BuildingBlocks.EventBus.Contracts;
+using BuildingBlocks.EventBus.Contracts;
 using MassTransit;
 using System;
 using System.Collections.Generic;
@@ -17,15 +17,14 @@ namespace BuildingBlocks.EventBus.Events
             _publishEndpoint = publishEndpoint;
         }
 
-        public async Task PublishAsync<T>(T @event) where T : class
+        public async Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default) where T : class
         {
-            await _publishEndpoint.Publish(@event);
+            await _publishEndpoint.Publish(@event, cancellationToken);
         }
 
-
-        public async Task PublishAsync(IntegrationEvent @event)
+        public async Task PublishAsync(IntegrationEvent @event, CancellationToken cancellationToken = default)
         {
-            await _publishEndpoint.Publish(@event);
+            await _publishEndpoint.Publish(@event, cancellationToken);
         }
     }
 

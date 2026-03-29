@@ -20,6 +20,13 @@ eBuildingBlocks/
 └── eBuildingBlocks.Common/        # Shared Utilities
 ```
 
+## 📚 Documentation
+
+- **[Hosting app: transactional outbox](docs/HOSTING_APP_OUTBOX.md)** — Wire `IEventTypeRegistry`, EF outbox interceptor, SQL Server outbox processor, and `IEventPublisher` in your host.
+- **[Repository & unit of work](docs/REPOSITORY_AND_UOW.md)** — `IUnitOfWork`, `AddDbContextUnitOfWork`, `IEfQueryableRepository`, and specification/queryable split.
+
+**Breaking changes (recent):** `FeatureGate` / `MultiTenancyOptions` live in namespace `eBuildingBlocks.Common.Features` (not `eBuildingBlocks.API.Features`). `IRepository` no longer includes `SaveChangesAsync` — use `IUnitOfWork` (see doc above).
+
 ## 🎯 Core Functionalities
 
 ### 1. **Domain Layer** (`eBuildingBlocks.Domain`)
@@ -271,8 +278,11 @@ public class UserCreatedEventHandler : IEventHandler<UserCreatedEvent>
     }
 }
 
-// 4. In repository/service - events auto-published after SaveChanges
-await _context.SaveChangesAndPublishEventsAsync(_eventBus, cancellationToken);
+// 4. Commit: use transactional outbox (processor publishes) OR in-process-only — not both for the same events
+// Outbox path (register DomainOutboxSaveChangesInterceptor + outbox processor):
+await _context.SaveChangesWithTransactionalOutboxAsync(cancellationToken);
+// In-process-only path (suppresses outbox enqueue for this call if interceptor is registered):
+// await _context.SaveChangesAndPublishDomainEventsInProcessAsync(_eventBus, cancellationToken);
 ```
 
 ### **Integration Events (Cross-Service)**

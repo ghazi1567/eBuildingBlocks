@@ -1,85 +1,84 @@
 using eBuildingBlocks.Application.Events;
-using eBuildingBlocks.Domain.Models;
+using eBuildingBlocks.Infrastructure.Outbox;
 using Microsoft.EntityFrameworkCore;
 
-namespace eBuildingBlocks.Infrastructure.Extensions
+namespace eBuildingBlocks.Infrastructure.Extensions;
+
+/// <summary>
+/// Extension methods for repository and <see cref="DbContext"/> operations.
+/// </summary>
+public static class RepositoryExtensions
 {
     /// <summary>
-    /// Extension methods for repository and DbContext operations.
+    /// Persists changes; <see cref="DomainOutboxSaveChangesInterceptor"/> enqueues <see cref="T:eBuildingBlocks.Domain.Models.OutboxMessage"/> rows
+    /// and clears aggregate domain events only after a successful commit. Use this when the outbox processor delivers events.
+    /// Do not combine with <see cref="SaveChangesAndPublishDomainEventsInProcessAsync"/> for the same logical event handling.
     /// </summary>
-    public static class RepositoryExtensions
+    public static Task<int> SaveChangesWithTransactionalOutboxAsync<TContext>(
+        this TContext context,
+        CancellationToken cancellationToken = default)
+        where TContext : DbContext
+        => context.SaveChangesAsync(cancellationToken);
+
+    /// <summary>
+    /// Snapshots domain events from the change tracker, saves, clears domain events on aggregates (before publishing),
+    /// then publishes in-process from the snapshot. Clearing before the publish loop avoids leaving events on entities
+    /// if <see cref="IEventBus.PublishAsync"/> fails partway through (retries would otherwise re-dispatch from the model).
+    /// Suppresses transactional outbox enqueue for this call when <see cref="Outbox.DomainOutboxSaveChangesInterceptor"/> is registered.
+    /// Prefer <see cref="SaveChangesWithTransactionalOutboxAsync{TContext}"/> when using the outbox processor instead.
+    /// </summary>
+    public static async Task<int> SaveChangesAndPublishDomainEventsInProcessAsync<TContext>(
+        this TContext context,
+        IEventBus eventBus,
+        CancellationToken cancellationToken = default)
+        where TContext : DbContext
     {
-        /// <summary>
-        /// Saves changes and publishes domain events from all entities.
-        /// </summary>
-        /// <typeparam name="TContext">The type of DbContext.</typeparam>
-        /// <param name="context">The database context.</param>
-        /// <param name="eventBus">The event bus for publishing events.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>The number of state entries written to the database.</returns>
-        public static async Task<int> SaveChangesAndPublishEventsAsync<TContext>(
-            this TContext context,
-            IEventBus eventBus,
-            CancellationToken cancellationToken = default)
-            where TContext : DbContext
+        var previousSuppress = DomainOutboxExecutionContext.SuppressTransactionalEnqueue.Value;
+        DomainOutboxExecutionContext.SuppressTransactionalEnqueue.Value = true;
+        try
         {
-            // Collect events from all entities that have domain events
-            // Use reflection to access DomainEvents property since BaseEntity<TKey> is generic
-            var entitiesWithEvents = new List<(object Entity, IReadOnlyCollection<IDomainEvent> Events)>();
-            
-            foreach (var entry in context.ChangeTracker.Entries())
-            {
-                var entity = entry.Entity;
-                var entityType = entity.GetType();
-                
-                // Check if entity has DomainEvents property (from BaseEntity<TKey>)
-                var domainEventsProperty = entityType.GetProperty("DomainEvents");
-                if (domainEventsProperty != null)
-                {
-                    var domainEvents = domainEventsProperty.GetValue(entity) as IReadOnlyCollection<IDomainEvent>;
-                    if (domainEvents != null && domainEvents.Any())
-                    {
-                        entitiesWithEvents.Add((entity, domainEvents));
-                    }
-                }
-            }
-            
-            var allEvents = entitiesWithEvents
-                .SelectMany(e => e.Events)
-                .ToList();
-            
-            // Save changes first (transaction)
-            var result = await context.SaveChangesAsync(cancellationToken);
-            
-            // Publish events after successful save
+            var entitiesWithEvents = DomainEventChangeTrackerHelper.CollectEntitiesWithDomainEvents(context);
+            var allEvents = entitiesWithEvents.SelectMany(e => e.Events).ToList();
+
+            var result = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            // Clear aggregates before publishing so a partial publish failure cannot leave events on entities
+            // (retry would otherwise re-dispatch already-handled work). Publishing uses the allEvents snapshot only.
+            foreach (var (entity, _) in entitiesWithEvents)
+                DomainEventChangeTrackerHelper.ClearDomainEventsOnEntity(entity);
+
             foreach (var @event in allEvents)
             {
                 try
                 {
-                    // Use reflection to call PublishAsync with correct generic type
-                    var eventType = @event.GetType();
-                    var method = typeof(IEventBus).GetMethod("PublishAsync")!
-                        .MakeGenericMethod(eventType);
-                    await (Task)method.Invoke(eventBus, new object[] { @event, cancellationToken })!;
+                    await eventBus.PublishAsync(@event, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
-                    // Log error but don't fail the transaction
-                    // Consider implementing dead letter queue or retry mechanism
                     throw new InvalidOperationException(
                         $"Error publishing domain event of type {@event.GetType().Name}. " +
                         "The database transaction was successful, but event publishing failed.", ex);
                 }
             }
-            
-            // Clear events after publishing
-            foreach (var (entity, _) in entitiesWithEvents)
-            {
-                var clearMethod = entity.GetType().GetMethod("ClearDomainEvents");
-                clearMethod?.Invoke(entity, null);
-            }
-            
+
             return result;
         }
+        finally
+        {
+            DomainOutboxExecutionContext.SuppressTransactionalEnqueue.Value = previousSuppress;
+        }
     }
+
+    /// <summary>
+    /// Obsolete: use <see cref="SaveChangesWithTransactionalOutboxAsync{TContext}"/> with the outbox interceptor, or
+    /// <see cref="SaveChangesAndPublishDomainEventsInProcessAsync{TContext}"/> for in-process-only dispatch.
+    /// </summary>
+    [Obsolete(
+        "Use SaveChangesWithTransactionalOutboxAsync when using DomainOutboxSaveChangesInterceptor, or SaveChangesAndPublishDomainEventsInProcessAsync for in-process-only. This overload now matches in-process behavior (outbox enqueue suppressed for this call).")]
+    public static Task<int> SaveChangesAndPublishEventsAsync<TContext>(
+        this TContext context,
+        IEventBus eventBus,
+        CancellationToken cancellationToken = default)
+        where TContext : DbContext
+        => SaveChangesAndPublishDomainEventsInProcessAsync(context, eventBus, cancellationToken);
 }

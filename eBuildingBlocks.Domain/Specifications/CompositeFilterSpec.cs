@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 
 namespace eBuildingBlocks.Domain.Specifications
 {
@@ -10,7 +10,7 @@ namespace eBuildingBlocks.Domain.Specifications
 
     public sealed record FilterCriterion(string Field, ComparisonOperator Op, object? Value);
 
-    public sealed class CompositeFilterSpec<T> : Specification<T>
+    public sealed class CompositeFilterSpec<T> : SpecificationBase<T> where T : class
     {
         public CompositeFilterSpec(IEnumerable<FilterCriterion> filters, Logical logical = Logical.And)
         {
@@ -20,11 +20,11 @@ namespace eBuildingBlocks.Domain.Specifications
             foreach (var f in filters)
             {
                 var pred = DynamicPredicate.Build<T>(f.Field, f.Op, f.Value);
-                var invoked = Expression.Invoke(pred, param);
+                var part = PredicateExpressionInliner.InlineBody(pred, param);
 
                 body = body is null
-                    ? invoked
-                    : (logical == Logical.And ? Expression.AndAlso(body, invoked) : Expression.OrElse(body, invoked));
+                    ? part
+                    : (logical == Logical.And ? Expression.AndAlso(body, part) : Expression.OrElse(body, part));
             }
 
             if (body is null) body = Expression.Constant(true); // no filters → always true

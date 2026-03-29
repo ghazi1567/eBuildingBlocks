@@ -1,4 +1,4 @@
-﻿using eBuildingBlocks.API.Features;
+using eBuildingBlocks.Common.Features;
 using eBuildingBlocks.Domain.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -54,10 +54,12 @@ public class TenantResolver : ICurrentUser
             // 2) HTTP header
             var ctx = _httpContextAccessor.HttpContext;
             var header = ctx?.Request.Headers[multiTenancy.HeaderName].FirstOrDefault();
-            if (!string.IsNullOrWhiteSpace(header)) return Guid.Parse(header);
+            if (!string.IsNullOrWhiteSpace(header) && Guid.TryParse(header, out var headerTenantId))
+                return headerTenantId;
 
             var tenantIdInClaim = _httpContextAccessor.HttpContext?.User.FindFirstValue(multiTenancy.HeaderName) ?? string.Empty;
-            if (!string.IsNullOrWhiteSpace(tenantIdInClaim)) return Guid.Parse(tenantIdInClaim);
+            if (!string.IsNullOrWhiteSpace(tenantIdInClaim) && Guid.TryParse(tenantIdInClaim, out var claimTenantId))
+                return claimTenantId;
 
             // 3) fallback default
             return multiTenancy.DefaultTenantId;

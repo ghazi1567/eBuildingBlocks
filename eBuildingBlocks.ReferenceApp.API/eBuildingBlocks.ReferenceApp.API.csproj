@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>eBuildingBlocks.ReferenceApp.API</RootNamespace>
+    <AssemblyName>eBuildingBlocks.ReferenceApp.API</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Hangfire.Core APIs (RecurringJob) — storage/dashboard come from eBuildingBlocks.API + BaseRegister. -->
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
+    <PackageReference Include="MassTransit" Version="8.2.5" />
+    <PackageReference Include="MassTransit.AspNetCore" Version="7.3.1" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.2.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\eBuildingBlocks.API\eBuildingBlocks.API.csproj" />
+    <ProjectReference Include="..\eBuildingBlocks.Application\eBuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\eBuildingBlocks.Common\eBuildingBlocks.Common.csproj" />
+    <ProjectReference Include="..\eBuildingBlocks.EventBus\eBuildingBlocks.EventBus.csproj" />
+    <ProjectReference Include="..\eBuildingBlocks.ReferenceApp.Application\eBuildingBlocks.ReferenceApp.Application.csproj" />
+    <ProjectReference Include="..\eBuildingBlocks.ReferenceApp.Infrastructure\eBuildingBlocks.ReferenceApp.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

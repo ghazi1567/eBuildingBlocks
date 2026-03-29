@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace eBuildingBlocks.Domain.Specifications
 {
-    public sealed class ByFieldSpec<T> : Specification<T>
+    public sealed class ByFieldSpec<T> : SpecificationBase<T> where T : class
     {
         public ByFieldSpec(string fieldName, object value, bool track = true)
         {
