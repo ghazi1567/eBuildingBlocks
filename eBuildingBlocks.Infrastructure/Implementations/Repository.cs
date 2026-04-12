@@ -48,30 +48,39 @@ public class Repository<TEntity, TKey, TDbContext>(
     }
 
     public async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken ct = default)
-         => await Entities<TEntity>().FindAsync(id, ct);
+    {
+        // FindAsync ignores global query filters; use a filtered query for tenant-scoped entities.
+        if (typeof(ITenantEntity).IsAssignableFrom(typeof(TEntity)))
+        {
+            return await Entities<TEntity>()
+                .FirstOrDefaultAsync(e => EF.Property<TKey>(e, "Id")!.Equals(id), ct);
+        }
+
+        return await Entities<TEntity>().FindAsync([id!], ct);
+    }
 
 
     public virtual IQueryable<TEntity> Query() => SetAsNoTracking;
 
     public async Task<TEntity?> FirstOrDefaultAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
-        => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec).FirstOrDefaultAsync(ct);
+        => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec, dbContext).FirstOrDefaultAsync(ct);
 
     public async Task<TEntity?> SingleOrDefaultAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
-       => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec).SingleOrDefaultAsync(ct);
+       => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec, dbContext).SingleOrDefaultAsync(ct);
 
 
     public async Task<IReadOnlyList<TEntity>> ListAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
-      => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec).ToListAsync(ct);
+      => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec, dbContext).ToListAsync(ct);
 
 
     public async Task<IReadOnlyList<TEntity>> ListAllAsync(CancellationToken ct = default)
         => await Entities<TEntity>().AsNoTracking().ToListAsync(ct);
 
     public async Task<int> CountAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
-       => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec).CountAsync(ct);
+       => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec, dbContext).CountAsync(ct);
 
 
     public async Task<bool> AnyAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
-     => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec).AnyAsync(ct);
+     => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec, dbContext).AnyAsync(ct);
 
 }

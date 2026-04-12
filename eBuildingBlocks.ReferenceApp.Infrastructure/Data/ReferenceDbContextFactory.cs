@@ -1,5 +1,8 @@
+using eBuildingBlocks.Common.Features;
+using eBuildingBlocks.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Options;
 
 namespace eBuildingBlocks.ReferenceApp.Infrastructure.Data;
 
@@ -14,6 +17,20 @@ public sealed class ReferenceDbContextFactory : IDesignTimeDbContextFactory<Refe
         var cs = Environment.GetEnvironmentVariable("REFERENCE_APP_CONNECTION") ?? DesignTimeConnection;
         var optionsBuilder = new DbContextOptionsBuilder<ReferenceDbContext>();
         optionsBuilder.UseSqlServer(cs);
-        return new ReferenceDbContext(optionsBuilder.Options);
+        // Migrations: disable tenant query filters at design time so the model is stable.
+        var mt = Options.Create(new MultiTenancyOptions { Enabled = false });
+        return new ReferenceDbContext(optionsBuilder.Options, DesignTimeCurrentUser.Instance, mt);
+    }
+
+    private sealed class DesignTimeCurrentUser : ICurrentUser
+    {
+        internal static readonly DesignTimeCurrentUser Instance = new();
+
+        public string? UserId => null;
+        public string? UserEmail => null;
+        public string IPAddress => "0.0.0.0";
+        public string UserName => "ef-design-time";
+        public Guid TenantId => Guid.Empty;
+        public string UserAgent => string.Empty;
     }
 }

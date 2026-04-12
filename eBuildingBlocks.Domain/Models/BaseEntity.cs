@@ -92,8 +92,8 @@ namespace eBuildingBlocks.Domain.Models
         DateTime OccurredAt { get; }
         
         /// <summary>
-        /// Tenant identifier (for multi-tenant systems).
+        /// Tenant identifier when the application uses multi-tenancy; use <see cref="Guid.Empty"/> only when multi-tenancy is disabled.
         /// </summary>
-        Guid? TenantId { get; }
+        Guid TenantId { get; }
     }
 }

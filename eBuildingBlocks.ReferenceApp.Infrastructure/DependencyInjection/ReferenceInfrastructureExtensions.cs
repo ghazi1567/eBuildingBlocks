@@ -25,6 +25,7 @@ public static class ReferenceInfrastructureExtensions
         services.AddDbContext<ReferenceDbContext>((sp, options) =>
         {
             options.UseSqlServer(connectionString);
+            options.UseApplicationServiceProvider(sp);
 
             // Ordering: audit first so stamps exist before outbox serialization reads aggregates (either order works for this app).
             options.AddInterceptors(

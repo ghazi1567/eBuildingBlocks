@@ -26,6 +26,7 @@ public static class DomainOutboxInfrastructureExtensions
             entity.HasIndex(e => e.EventName);
             entity.Property(e => e.PayloadJson).IsRequired();
             entity.Property(e => e.CreatedAtUtc).IsRequired();
+            entity.Property(e => e.TenantId).IsRequired();
             entity.Property(e => e.AttemptCount).IsRequired().HasDefaultValue(0);
             entity.Property(e => e.LastError).HasMaxLength(4000);
             entity.HasIndex(e => e.CreatedAtUtc);

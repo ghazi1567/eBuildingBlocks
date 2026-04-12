@@ -18,6 +18,9 @@ using Hangfire;
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
+// Required when multi-tenancy validates header vs JWT claim (UseAuthentication runs even if Features:Authorization is off).
+builder.Services.AddAuthentication();
+
 // FluentValidation assembly = application layer (validators live with commands).
 builder.Services.BaseRegister(
     configuration,

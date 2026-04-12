@@ -39,14 +39,12 @@ public sealed class PlaceOrderCommandHandler(
         }
 
         var mt = multiTenancyOptions.Value;
-        var tenantId = mt.Enabled ? currentUser.TenantId : mt.DefaultTenantId != Guid.Empty ? mt.DefaultTenantId : Guid.Parse("00000000-0000-0000-0000-000000000001");
-
-        if (mt.Enabled && currentUser.TenantId == Guid.Empty)
-        {
-            return ResponseModel<PlaceOrderResultDto>.Fail(
-                "Multi-tenancy is enabled but no tenant was resolved. Send header X-Tenant-Id.",
-                HttpStatusCode.BadRequest);
-        }
+        // When multi-tenancy is enabled, ICurrentUser.TenantId throws TenantResolutionException if unresolved.
+        var tenantId = mt.Enabled
+            ? currentUser.TenantId
+            : (mt.DefaultTenantId != Guid.Empty
+                ? mt.DefaultTenantId
+                : Guid.Parse("00000000-0000-0000-0000-000000000001"));
 
         var order = Order.CreateDraft(tenantId);
         order.PlaceOrder(command.OrderNumber, command.TotalAmount);

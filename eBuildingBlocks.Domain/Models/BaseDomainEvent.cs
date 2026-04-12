@@ -17,22 +17,21 @@ namespace eBuildingBlocks.Domain.Models
         public DateTime OccurredAt { get; } = DateTime.UtcNow;
         
         /// <summary>
-        /// Tenant identifier (for multi-tenant systems).
+        /// Tenant identifier. Must be non-empty when multi-tenancy is enabled (set via ctor or property before raising).
         /// </summary>
-        public Guid? TenantId { get; set; }
-        
+        public Guid TenantId { get; set; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseDomainEvent"/> class.
         /// </summary>
         protected BaseDomainEvent()
         {
         }
-        
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="BaseDomainEvent"/> class with tenant identifier.
+        /// Initializes a new instance with a tenant identifier (required for multi-tenant hosts).
         /// </summary>
-        /// <param name="tenantId">The tenant identifier.</param>
-        protected BaseDomainEvent(Guid? tenantId)
+        protected BaseDomainEvent(Guid tenantId)
         {
             TenantId = tenantId;
         }

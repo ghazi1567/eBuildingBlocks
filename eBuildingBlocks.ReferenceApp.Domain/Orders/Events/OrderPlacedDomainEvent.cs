@@ -15,7 +15,7 @@ public sealed record OrderPlacedDomainEvent : IDomainEvent
 
     public DateTime OccurredAt { get; init; } = DateTime.UtcNow;
 
-    public Guid? TenantId { get; init; }
+    public Guid TenantId { get; init; }
 
     public Guid OrderId { get; init; }
 

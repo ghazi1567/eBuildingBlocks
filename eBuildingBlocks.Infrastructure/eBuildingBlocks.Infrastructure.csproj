@@ -34,7 +34,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.9" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\eBuildingBlocks.Application\eBuildingBlocks.Application.csproj" />
+		<ProjectReference Include="..\eBuildingBlocks.Common\eBuildingBlocks.Common.csproj" />
 		<ProjectReference Include="..\eBuildingBlocks.Domain\eBuildingBlocks.Domain.csproj" />
 		<ProjectReference Include="..\eBuildingBlocks.EventBus\eBuildingBlocks.EventBus.csproj" />
 	</ItemGroup>

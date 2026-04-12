@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\eBuildingBlocks.Common\eBuildingBlocks.Common.csproj" />
     <ProjectReference Include="..\eBuildingBlocks.Infrastructure\eBuildingBlocks.Infrastructure.csproj" />
     <ProjectReference Include="..\eBuildingBlocks.ReferenceApp.Domain\eBuildingBlocks.ReferenceApp.Domain.csproj" />
   </ItemGroup>

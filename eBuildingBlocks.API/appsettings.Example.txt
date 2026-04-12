@@ -57,18 +57,20 @@
     "MemoryCache": { "Enabled": true },
     "Redis": { "Enabled": false },
 
-    "FeatureManagement": { "Enabled": false }
+    "FeatureManagement": { "Enabled": false },
+    "MultiTenancy": {
+      "Enabled": true,
+      "HeaderName": "X-Tenant-Id",
+      "ClaimType": "tenant_id",
+      "AllowDefaultTenantFallback": false,
+      "ValidateHeaderAgainstClaims": true,
+      "DefaultTenantId": "00000000-0000-0000-0000-000000000000"
+    }
   },
   "Logging": {
     "LogLevel": {
       "Default": "Information",
       "Microsoft.AspNetCore": "Warning"
     }
-  },
-  "MultiTenancy": {
-    "Enabled": true,
-    "Source": "Header",
-    "HeaderName": "X-TenantId",
-    "DefaultTenantId": null
   }
 }

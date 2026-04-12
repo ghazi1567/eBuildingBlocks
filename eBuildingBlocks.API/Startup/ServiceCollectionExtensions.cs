@@ -4,6 +4,7 @@ using Asp.Versioning;
 using eBuildingBlocks.Common.Features;
 using eBuildingBlocks.API.Helpers;
 using eBuildingBlocks.Domain.Interfaces;
+using eBuildingBlocks.Infrastructure.Tenancy;
 using Hangfire;
 using Hangfire.MemoryStorage;
 using Hangfire.SqlServer;
@@ -130,6 +131,7 @@ public static class ServiceCollectionExtensions
     {
         if (!FeatureGate.Enabled(cfg, "Features:MemoryCache", fallback: true)) return services;
         services.AddMemoryCache();
+        services.AddTenantMemoryCache();
         return services;
     }
 
@@ -147,11 +149,7 @@ public static class ServiceCollectionExtensions
 
     private static IServiceCollection RegisterCurrentUser(this IServiceCollection services, IConfiguration cfg)
     {
-        // Options binding for hosts that inject IOptions<MultiTenancyOptions> (e.g. application handlers).
-        services.Configure<MultiTenancyOptions>(cfg.GetSection("Features:MultiTenancy"));
-        services.AddHttpContextAccessor();
-        services.AddSingleton<ICurrentUser, TenantResolver>();
-        services.AddSingleton<ITenantScope, TenantScope>();
+        services.AddTenantContextCore(cfg);
         return services;
     }
 

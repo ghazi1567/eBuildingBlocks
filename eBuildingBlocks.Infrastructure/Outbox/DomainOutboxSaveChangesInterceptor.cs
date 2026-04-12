@@ -2,10 +2,13 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using eBuildingBlocks.Application.Eventing;
+using eBuildingBlocks.Common.Features;
+using eBuildingBlocks.Domain.Interfaces;
 using eBuildingBlocks.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace eBuildingBlocks.Infrastructure.Outbox;
 
@@ -27,13 +30,16 @@ public sealed class DomainOutboxSaveChangesInterceptor : SaveChangesInterceptor
     private readonly ConcurrentDictionary<DbContext, List<object>> _pendingPostCommitDomainEventClears = new();
     private readonly IEventTypeRegistry _eventTypeRegistry;
     private readonly ILogger<DomainOutboxSaveChangesInterceptor> _logger;
+    private readonly IOptions<MultiTenancyOptions> _multiTenancy;
 
     public DomainOutboxSaveChangesInterceptor(
         IEventTypeRegistry eventTypeRegistry,
-        ILogger<DomainOutboxSaveChangesInterceptor> logger)
+        ILogger<DomainOutboxSaveChangesInterceptor> logger,
+        IOptions<MultiTenancyOptions> multiTenancy)
     {
         _eventTypeRegistry = eventTypeRegistry;
         _logger = logger;
+        _multiTenancy = multiTenancy;
     }
 
     public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
@@ -57,7 +63,7 @@ public sealed class DomainOutboxSaveChangesInterceptor : SaveChangesInterceptor
         var now = DateTime.UtcNow;
         var outboxRows = new List<OutboxMessage>();
 
-        foreach (var (_, events) in toEnqueue)
+        foreach (var (entity, events) in toEnqueue)
         {
             foreach (var @event in events)
             {
@@ -69,6 +75,8 @@ public sealed class DomainOutboxSaveChangesInterceptor : SaveChangesInterceptor
                         $"Call {nameof(IEventTypeRegistry.Register)}<{type.Name}>(\"your.stable.name.v1\") at startup.");
                 }
 
+                var tenantId = ResolveOutboxTenantId(entity, @event);
+
                 outboxRows.Add(new OutboxMessage
                 {
                     Id = Guid.CreateVersion7(),
@@ -76,7 +84,7 @@ public sealed class DomainOutboxSaveChangesInterceptor : SaveChangesInterceptor
                     EventName = eventName,
                     PayloadJson = JsonSerializer.Serialize(@event, type, JsonOptions),
                     CreatedAtUtc = now,
-                    TenantId = @event.TenantId
+                    TenantId = tenantId
                 });
             }
         }
@@ -112,5 +120,30 @@ public sealed class DomainOutboxSaveChangesInterceptor : SaveChangesInterceptor
             _pendingPostCommitDomainEventClears.TryRemove(ctx, out _);
 
         return base.SaveChangesFailedAsync(eventData, cancellationToken);
+    }
+
+    private Guid ResolveOutboxTenantId(object entity, IDomainEvent @event)
+    {
+        if (@event.TenantId != Guid.Empty)
+            return @event.TenantId;
+
+        if (entity is ITenantEntity te)
+        {
+            if (_multiTenancy.Value.Enabled && te.TenantId == Guid.Empty)
+            {
+                throw new InvalidOperationException(
+                    $"Multi-tenancy is enabled but aggregate for event '{@event.GetType().Name}' has an empty {nameof(ITenantEntity.TenantId)}.");
+            }
+
+            return te.TenantId;
+        }
+
+        if (_multiTenancy.Value.Enabled)
+        {
+            throw new InvalidOperationException(
+                $"Multi-tenancy is enabled but domain event '{@event.GetType().Name}' has an empty {nameof(IDomainEvent.TenantId)} and the entity is not {nameof(ITenantEntity)}.");
+        }
+
+        return Guid.Empty;
     }
 }

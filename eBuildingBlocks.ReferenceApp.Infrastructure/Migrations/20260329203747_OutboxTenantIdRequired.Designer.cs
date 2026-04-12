@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using eBuildingBlocks.ReferenceApp.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using eBuildingBlocks.ReferenceApp.Infrastructure.Data;
 namespace eBuildingBlocks.ReferenceApp.Infrastructure.Migrations
 {
     [DbContext(typeof(ReferenceDbContext))]
-    partial class ReferenceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260329203747_OutboxTenantIdRequired")]
+    partial class OutboxTenantIdRequired
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

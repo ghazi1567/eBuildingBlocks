@@ -91,9 +91,22 @@ public static class AppUseExtensions
     /// <returns></returns>
     public static IApplicationBuilder UsingAuthorization(this IApplicationBuilder app, IConfiguration cfg)
     {
-        if (!FeatureGate.Enabled(cfg, "Features:Authorization")) return app;
+        var authEnabled = FeatureGate.Enabled(cfg, "Features:Authorization");
+        var mt = cfg.GetSection("Features:MultiTenancy");
+        var tenantHeaderValidate = mt.GetValue<bool>("Enabled") && mt.GetValue("ValidateHeaderAgainstClaims", true);
 
-        app.UseAuthentication();
+        if (!authEnabled && !tenantHeaderValidate)
+            return app;
+
+        if (authEnabled || tenantHeaderValidate)
+            app.UseAuthentication();
+
+        if (tenantHeaderValidate)
+            app.UseMiddleware<TenantHeaderValidationMiddleware>();
+
+        if (!authEnabled)
+            return app;
+
         app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
         app.UseAuthorization();
         return app;

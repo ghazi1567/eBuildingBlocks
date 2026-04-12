@@ -19,7 +19,8 @@ public class OutboxMessage : IEntity
 
     public DateTime CreatedAtUtc { get; set; }
 
-    public Guid? TenantId { get; set; }
+    /// <summary>Use <see cref="Guid.Empty"/> only when multi-tenancy is disabled for the host.</summary>
+    public Guid TenantId { get; set; }
 
     /// <summary>Number of failed publish attempts (successful publish clears via <see cref="ProcessedAtUtc"/>).</summary>
     public int AttemptCount { get; set; }

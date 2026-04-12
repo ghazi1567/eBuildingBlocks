@@ -1,11 +1,13 @@
 using eBuildingBlocks.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace eBuildingBlocks.Infrastructure.Specifications;
 
 public static class SpecificationEvaluator
 {
-    public static IQueryable<T> GetQuery<T>(IQueryable<T> input, ISpecification<T> spec) where T : class
+    public static IQueryable<T> GetQuery<T>(IQueryable<T> input, ISpecification<T> spec, DbContext dbContext)
+        where T : class
     {
         var query = input;
 
@@ -13,7 +15,16 @@ public static class SpecificationEvaluator
             query = query.Where(spec.Criteria);
 
         if (spec.IgnoreQueryFilters)
+        {
+            var bypass = dbContext.GetService<IQueryFilterBypassEvaluator>();
+            if (bypass?.CanIgnoreGlobalQueryFilters != true)
+            {
+                throw new InvalidOperationException(
+                    "IgnoreQueryFilters is not allowed unless IQueryFilterBypassEvaluator.CanIgnoreGlobalQueryFilters is true (register an elevated evaluator for admin/migration scenarios).");
+            }
+
             query = query.IgnoreQueryFilters();
+        }
 
         if (spec is IEfSpecification<T> ef)
         {

@@ -1,0 +1,28 @@
+Act as a Senior .NET Architect and Security Auditor. I have a solution containing a core building block library (eBuildingBlocks.*) and a reference application (eBuildingBlocks.ReferenceApp).
+
+Objective: Deeply analyze only the core library projects (excluding ReferenceApp) to build a technical map of the framework.
+
+Analysis Tasks:
+
+Pattern Mapping: Identify the implementation details for:
+
+DDD Core: Base classes for Entity, AggregateRoot, and ValueObject.
+
+Persistence: The specific flavor of IRepository and how UnitOfWork handles transaction boundaries.
+
+Messaging: The abstraction layer for EventBus (RabbitMQ/Azure Service Bus).
+
+Cross-Cutting: How Audit Logging, Global Exception Handling, and Validation (FluentValidation) are integrated.
+
+Technical Gap Analysis: >    List specific improvements or gaps in the current core library implementation regarding:
+
+Performance: (e.g., missing Caching abstractions, inefficient LINQ, or lack of AsNoTracking in base repos).
+
+Resiliency: (e.g., lack of Polly integration for the EventBus or Database retries).
+
+Observability: (e.g., missing OpenTelemetry or structured logging headers).
+
+Security: (e.g., lack of tenancy isolation logic in the base repository).
+
+Output Requirement: > Provide a concise summary of the architecture and a bulleted list of "Gaps & Improvements."
+Wait for my confirmation before looking at the ReferenceApp or writing any code.

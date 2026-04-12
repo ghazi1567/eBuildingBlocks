@@ -1,5 +1,6 @@
 using eBuildingBlocks.Application.Exceptions;
 using eBuildingBlocks.Application.Features;
+using eBuildingBlocks.Domain.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Net;
@@ -72,6 +73,8 @@ public sealed class GlobalExceptionHandlerMiddleware
             // Domain/application exceptions (examples)
             BadRequestException bre
                 => (HttpStatusCode.BadRequest, ResponseModel.Fail(bre.Error ?? "Bad request")),
+            TenantResolutionException tre
+                => (HttpStatusCode.BadRequest, ResponseModel.Fail(tre.Message)),
             UnauthorizedException ue
                 => (HttpStatusCode.Unauthorized, ResponseModel.Fail(ue.Error ?? "Unauthorized", HttpStatusCode.Unauthorized)),
             ForbiddenException fe

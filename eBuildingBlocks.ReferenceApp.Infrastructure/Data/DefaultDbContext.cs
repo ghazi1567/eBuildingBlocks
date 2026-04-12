@@ -1,5 +1,9 @@
+using eBuildingBlocks.Common.Features;
+using eBuildingBlocks.Domain.Interfaces;
 using eBuildingBlocks.Domain.Models;
+using eBuildingBlocks.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace eBuildingBlocks.ReferenceApp.Infrastructure.Data;
 
@@ -8,10 +12,13 @@ namespace eBuildingBlocks.ReferenceApp.Infrastructure.Data;
 /// refers to this pattern as "DefaultDBContext": one place for cross-cutting sets such as <see cref="AuditLog"/>
 /// that <see cref="eBuildingBlocks.Infrastructure.Implementations.AuditSaveChangesInterceptor"/> appends on each save.
 /// </summary>
-public abstract class DefaultDbContext : DbContext
+public abstract class DefaultDbContext : TenantAwareDbContext
 {
-    protected DefaultDbContext(DbContextOptions options)
-        : base(options)
+    protected DefaultDbContext(
+        DbContextOptions options,
+        ICurrentUser currentUser,
+        IOptions<MultiTenancyOptions> multiTenancyOptions)
+        : base(options, currentUser, multiTenancyOptions)
     {
     }
 

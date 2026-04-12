@@ -1,13 +1,20 @@
+using eBuildingBlocks.Common.Features;
+using eBuildingBlocks.Domain.Interfaces;
 using eBuildingBlocks.Infrastructure.Outbox;
 using eBuildingBlocks.ReferenceApp.Domain.Orders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace eBuildingBlocks.ReferenceApp.Infrastructure.Data;
 
 /// <summary>
 /// Application database. Outbox + multi-tenant indexes are configured here alongside the B2B order model.
 /// </summary>
-public sealed class ReferenceDbContext(DbContextOptions<ReferenceDbContext> options) : DefaultDbContext(options)
+public sealed class ReferenceDbContext(
+    DbContextOptions<ReferenceDbContext> options,
+    ICurrentUser currentUser,
+    IOptions<MultiTenancyOptions> multiTenancyOptions)
+    : DefaultDbContext(options, currentUser, multiTenancyOptions)
 {
     public DbSet<Order> Orders => Set<Order>();
 
