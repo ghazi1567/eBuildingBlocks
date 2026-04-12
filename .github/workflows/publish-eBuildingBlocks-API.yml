@@ -3,7 +3,7 @@ name: Publish eBuildingBlocks.API
 on:
   push:
     branches:
-      - main
+      - latest-dotnet-10
     paths:
       - 'eBuildingBlocks.API/**'
       - '.github/workflows/publish-eBuildingBlocks-API.yml'

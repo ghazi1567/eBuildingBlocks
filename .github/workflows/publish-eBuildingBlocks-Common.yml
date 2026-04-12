@@ -3,7 +3,7 @@ name: Publish eBuildingBlocks.Common
 on:
   push:
     branches:
-      - main
+      - latest-dotnet-10
     paths:
       - 'eBuildingBlocks.Common/**'
       - '.github/workflows/publish-eBuildingBlocks-Common.yml'

@@ -3,7 +3,7 @@ name: Publish eBuildingBlocks.EventBus
 on:
   push:
     branches:
-      - main
+      - latest-dotnet-10
     paths:
       - 'eBuildingBlocks.EventBus/**'
       - '.github/workflows/publish-eBuildingBlocks-EventBus.yml'
