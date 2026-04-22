@@ -177,6 +177,12 @@ public static class ServiceCollectionExtensions
                 // 2. Add Security Schemes to Components
                 document.Components ??= new OpenApiComponents();
 
+                // Use the explicit check if assignment is restricted
+                if (document.Components.SecuritySchemes == null)
+                {
+                    document.Components.SecuritySchemes = new Dictionary<string, IOpenApiSecurityScheme>();
+                }
+
                 document.Components.SecuritySchemes.Add("Bearer", new OpenApiSecurityScheme
                 {
                     Type = SecuritySchemeType.Http,
@@ -184,7 +190,6 @@ public static class ServiceCollectionExtensions
                     BearerFormat = "JWT",
                     Description = "Please insert JWT into field"
                 });
-
                 document.Components.SecuritySchemes.Add("ApiKey", new OpenApiSecurityScheme
                 {
                     Type = SecuritySchemeType.ApiKey,

@@ -12,7 +12,7 @@
     <Description>Reusable building block for the  ecosystem. Implements core cross-cutting concerns, infrastructure, or domain utilities for .NET applications.</Description>
     <Copyright>Copyright © linkedin/in/inam1567. All rights reserved.</Copyright>
     <RepositoryUrl>https://github.com/ghazi1567/eBuildingBlocks</RepositoryUrl>
-    <Version>3.0.0</Version>
+    <Version>3.0.1</Version>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
@@ -47,6 +47,7 @@
 		<PackageReference Include="StackExchange.Redis" Version="2.12.1" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
 		<PackageReference Include="System.Drawing.Common" Version="10.0.5" />
+		<PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.7" />
 	</ItemGroup>
 
 	<ItemGroup>
