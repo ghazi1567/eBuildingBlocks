@@ -95,7 +95,7 @@ public sealed class GlobalExceptionHandlerMiddleware
                 => (HttpStatusCode.RequestTimeout, ResponseModel.Fail("The operation was canceled.", HttpStatusCode.RequestTimeout)),
 
             // Fallback
-            _ => (HttpStatusCode.InternalServerError, ResponseModel.Fail("An unexpected error occurred.", HttpStatusCode.InternalServerError))
+            _ => (HttpStatusCode.InternalServerError, ResponseModel.Fail(ex.Message ?? "An unexpected error occurred.", HttpStatusCode.InternalServerError))
         };
 
 
