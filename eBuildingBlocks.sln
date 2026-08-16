@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.8.12105.206 oobstable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eBuildingBlocks.API", "eBuildingBlocks.API\eBuildingBlocks.API.csproj", "{49887EF1-3AD4-45C3-85CA-7AAB39E5ED36}"
 EndProject
@@ -28,6 +28,15 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eBuildingBlocks.ReferenceApp.Infrastructure", "eBuildingBlocks.ReferenceApp.Infrastructure\eBuildingBlocks.ReferenceApp.Infrastructure.csproj", "{365D6FFF-8A89-4040-AF89-D35711D782DE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eBuildingBlocks.ReferenceApp.API", "eBuildingBlocks.ReferenceApp.API\eBuildingBlocks.ReferenceApp.API.csproj", "{94340B80-A060-4819-856F-0A0A872259BE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{B13235DD-86CE-4E2B-ABC4-6DFFAE95CA3F}"
+	ProjectSection(SolutionItems) = preProject
+		docs\ARCHITECTURE_ANALYSIS.md = docs\ARCHITECTURE_ANALYSIS.md
+		docs\DECOUPLING_IMPLEMENTATION_PLAN.md = docs\DECOUPLING_IMPLEMENTATION_PLAN.md
+		docs\HOSTING_APP_OUTBOX.md = docs\HOSTING_APP_OUTBOX.md
+		docs\MULTI_TENANCY.md = docs\MULTI_TENANCY.md
+		docs\REPOSITORY_AND_UOW.md = docs\REPOSITORY_AND_UOW.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

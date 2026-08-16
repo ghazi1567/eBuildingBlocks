@@ -24,6 +24,7 @@ eBuildingBlocks/
 
 - **[Hosting app: transactional outbox](docs/HOSTING_APP_OUTBOX.md)** — Wire `IEventTypeRegistry`, EF outbox interceptor, SQL Server outbox processor, and `IEventPublisher` in your host.
 - **[Repository & unit of work](docs/REPOSITORY_AND_UOW.md)** — `IUnitOfWork`, `AddDbContextUnitOfWork`, `IEfQueryableRepository`, and specification/queryable split.
+- **[Migration: Outbox publisher resolution](docs/MIGRATION_OUTBOX_PUBLISHER.md)** — the outbox processor now prefers the broker-agnostic `IOutboxIntegrationPublisher` over the MassTransit-specific `IEventPublisher`; no action needed for existing `AddIntegrationMassTransit` consumers.
 
 **Breaking changes (recent):** `FeatureGate` / `MultiTenancyOptions` live in namespace `eBuildingBlocks.Common.Features` (not `eBuildingBlocks.API.Features`). `IRepository` no longer includes `SaveChangesAsync` — use `IUnitOfWork` (see doc above).
 

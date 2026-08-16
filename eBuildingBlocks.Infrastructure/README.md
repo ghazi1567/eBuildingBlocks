@@ -6,6 +6,10 @@ A comprehensive infrastructure building block for .NET applications that provide
 
 eBuildingBlocks.Infrastructure is a foundational library that implements data access patterns, repository implementations, audit logging, and Entity Framework Core utilities. It provides the infrastructure layer for your application with built-in support for Entity Framework Core, Dapper, and audit logging.
 
+## Documentation
+
+- **[Migration: Outbox publisher resolution](../docs/MIGRATION_OUTBOX_PUBLISHER.md)** — the transactional outbox processor now prefers the broker-agnostic `IOutboxIntegrationPublisher` over the MassTransit-specific `IEventPublisher`; existing consumers are unaffected.
+
 ## Key Features
 
 ### 🗄️ Data Access

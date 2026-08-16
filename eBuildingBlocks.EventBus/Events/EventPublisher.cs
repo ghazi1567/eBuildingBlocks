@@ -1,5 +1,6 @@
 using BuildingBlocks.EventBus.Contracts;
 using eBuildingBlocks.Common.Features;
+using eBuildingBlocks.Common.Outbox;
 using MassTransit;
 using Microsoft.Extensions.Options;
 
@@ -7,7 +8,7 @@ namespace BuildingBlocks.EventBus.Events;
 
 public sealed class EventPublisher(
     IPublishEndpoint publishEndpoint,
-    IOptionsMonitor<MultiTenancyOptions> multiTenancyOptions) : IEventPublisher
+    IOptionsMonitor<MultiTenancyOptions> multiTenancyOptions) : IEventPublisher, IOutboxIntegrationPublisher
 {
     private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
     private readonly IOptionsMonitor<MultiTenancyOptions> _multiTenancyOptions = multiTenancyOptions;

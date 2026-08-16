@@ -2,9 +2,11 @@ using System.Data;
 using System.Data.Common;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using BuildingBlocks.EventBus.Events;
 using Dapper;
 using eBuildingBlocks.Application.Eventing;
+using eBuildingBlocks.Common.Outbox;
 using eBuildingBlocks.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -16,12 +18,45 @@ using Microsoft.Extensions.Options;
 namespace eBuildingBlocks.Infrastructure.Outbox;
 
 /// <summary>
-/// Polls <see cref="OutboxMessage"/> rows (SQL Server locking hints via raw SQL) and publishes via <see cref="IEventPublisher"/>.
+/// Polls <see cref="OutboxMessage"/> rows and publishes via <see cref="IOutboxIntegrationPublisher"/>
+/// (preferred) or, for backward compatibility, <c>IEventPublisher</c> from eBuildingBlocks.EventBus
+/// (deprecated — see migration guide linked in the runtime warning log).
 /// Resolves CLR types using <see cref="IEventTypeRegistry"/>; unknown keys are poisoned without stopping the worker.
 /// </summary>
 public sealed class OutboxProcessorBackgroundService<TDbContext> : BackgroundService
     where TDbContext : DbContext
 {
+    private static int _legacyPublisherWarningLogged;
+
+    internal static IOutboxIntegrationPublisher ResolvePublisher(IServiceProvider sp, ILogger logger)
+    {
+        var modern = sp.GetService<IOutboxIntegrationPublisher>();
+        if (modern is not null)
+            return modern;
+
+        var legacy = sp.GetService<IEventPublisher>();
+        if (legacy is not null)
+        {
+            if (Interlocked.Exchange(ref _legacyPublisherWarningLogged, 1) == 0)
+            {
+                logger.LogWarning(
+                    "Outbox processor resolved IEventPublisher directly. This fallback is " +
+                    "deprecated and will be removed in the next major version of " +
+                    "eBuildingBlocks.Infrastructure. Register IOutboxIntegrationPublisher " +
+                    "instead — if you already call AddIntegrationMassTransit(), this happens " +
+                    "automatically as of eBuildingBlocks.EventBus 3.x. See the migration guide: " +
+                    "https://github.com/ghazi1567/eBuildingBlocks/blob/main/docs/MIGRATION_OUTBOX_PUBLISHER.md");
+            }
+#pragma warning disable CS0618 // intentional bridge to the deprecated IEventPublisher fallback
+            return new LegacyEventPublisherAdapter(legacy);
+#pragma warning restore CS0618
+        }
+
+        throw new InvalidOperationException(
+            "No outbox publisher registered. Register IOutboxIntegrationPublisher " +
+            "(e.g. via eBuildingBlocks.EventBus's AddIntegrationMassTransit) before starting the outbox processor.");
+    }
+
     private static readonly JsonSerializerOptions DeserializeOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -83,7 +118,7 @@ public sealed class OutboxProcessorBackgroundService<TDbContext> : BackgroundSer
         await using var scope = _scopeFactory.CreateAsyncScope();
         var sp = scope.ServiceProvider;
         var db = sp.GetRequiredService<TDbContext>();
-        var publisher = sp.GetRequiredService<IEventPublisher>();
+        var publisher = ResolvePublisher(sp, _logger);
         var registry = sp.GetRequiredService<IEventTypeRegistry>();
         var opt = _options.Value;
 
@@ -160,7 +195,7 @@ public sealed class OutboxProcessorBackgroundService<TDbContext> : BackgroundSer
 
     private async Task PublishSingleAsync(
         TDbContext db,
-        IEventPublisher publisher,
+        IOutboxIntegrationPublisher publisher,
         IEventTypeRegistry registry,
         OutboxMessage message,
         OutboxProcessorOptions opt,

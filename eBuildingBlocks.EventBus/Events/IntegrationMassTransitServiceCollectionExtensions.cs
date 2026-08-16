@@ -1,4 +1,5 @@
 using System.Reflection;
+using eBuildingBlocks.Common.Outbox;
 using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,7 @@ public static class IntegrationMassTransitServiceCollectionExtensions
         bool? useInMemory = null)
     {
         services.AddScoped<IEventPublisher, EventPublisher>();
+        services.AddScoped<IOutboxIntegrationPublisher>(sp => (IOutboxIntegrationPublisher)sp.GetRequiredService<IEventPublisher>());
         services.AddScoped<IEventSubscriber, EventSubscriber>();
 
         // Avoid IConfiguration.GetValue: MassTransit brings conflicting extension methods.
