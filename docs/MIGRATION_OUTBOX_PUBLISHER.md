@@ -1,5 +1,13 @@
 # Migration: Outbox publisher resolution
 
+## Breaking in 4.0
+If you're upgrading directly from `eBuildingBlocks.Infrastructure` 3.x or earlier and
+you use the outbox processor, you must have `IOutboxIntegrationPublisher` registered
+**before** calling `AddOutboxProcessor<TDbContext>()` — either via
+`eBuildingBlocks.EventBus`'s `AddIntegrationMassTransit(...)` (>= 3.x, which registers
+it automatically) or your own implementation. Without it, the app will fail to start
+with a clear exception rather than degrade silently.
+
 ## What changed
 `eBuildingBlocks.Infrastructure`'s outbox processor now prefers
 `eBuildingBlocks.Common.Outbox.IOutboxIntegrationPublisher` over the MassTransit-specific
@@ -28,9 +36,9 @@ services.AddScoped<IOutboxIntegrationPublisher, MyCustomOutboxPublisher>();
 ```
 
 ## Timeline
-- **Now (eBuildingBlocks.Infrastructure 3.x):** both paths work. Legacy path logs a
-  warning once per process.
-- **Next major version (eBuildingBlocks.Infrastructure 4.0, separately scheduled):**
-  the `IEventPublisher` fallback and the `EventBus` project reference are removed.
-  Apps that have not registered `IOutboxIntegrationPublisher` by then will get a
-  clear startup exception with the same guidance instead of a warning.
+- **eBuildingBlocks.Infrastructure 3.x (superseded):** both paths worked. Legacy
+  path logged a warning once per process.
+- **eBuildingBlocks.Infrastructure 4.0 (current):** the `IEventPublisher` fallback
+  and the `EventBus` project reference have been removed. Apps that have not
+  registered `IOutboxIntegrationPublisher` will get a startup
+  `InvalidOperationException` naming the missing service instead of a warning.

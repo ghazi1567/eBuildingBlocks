@@ -12,7 +12,7 @@
     <Description>Reusable building block for the  ecosystem. Implements core cross-cutting concerns, infrastructure, or domain utilities for .NET applications.</Description>
     <Copyright>Copyright © linkedin/in/inam1567. All rights reserved.</Copyright>
     <RepositoryUrl>https://github.com/ghazi1567/eBuildingBlocks</RepositoryUrl>
-    <Version>3.2.0</Version>
+    <Version>4.0.0</Version>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
@@ -34,7 +34,6 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.5" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.5" />
 		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.5" />
-		<PackageReference Include="RabbitMQ.Client" Version="7.2.1" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -46,7 +45,6 @@
 		<ProjectReference Include="..\eBuildingBlocks.Application\eBuildingBlocks.Application.csproj" />
 		<ProjectReference Include="..\eBuildingBlocks.Common\eBuildingBlocks.Common.csproj" />
 		<ProjectReference Include="..\eBuildingBlocks.Domain\eBuildingBlocks.Domain.csproj" />
-		<ProjectReference Include="..\eBuildingBlocks.EventBus\eBuildingBlocks.EventBus.csproj" />
 	</ItemGroup>
 
 </Project>

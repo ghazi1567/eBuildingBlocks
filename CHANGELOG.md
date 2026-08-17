@@ -26,6 +26,22 @@ Entries are grouped by package below. Each package versions independently — se
 
 ## eBuildingBlocks.Infrastructure
 
+### 4.0.0 — Breaking
+- Removed the deprecated `IEventPublisher` fallback in the outbox processor
+  (deprecated since 3.1.0). `IOutboxIntegrationPublisher` must now be registered
+  explicitly before starting the outbox processor.
+- Removed the `ProjectReference` to `eBuildingBlocks.EventBus`. Consumers who use
+  the outbox + MassTransit combination and were relying on the transitive
+  MassTransit/RabbitMQ.Client dependency must now reference
+  `eBuildingBlocks.EventBus` directly.
+- Also removed a direct, unused `RabbitMQ.Client` `PackageReference` that predated
+  this effort and was independent of the `EventBus` reference — nothing in
+  `Infrastructure`'s own code referenced it. Without removing it, `RabbitMQ.Client`
+  would still have appeared in `Infrastructure`'s package graph despite the
+  `EventBus` reference being gone.
+- See [docs/MIGRATION_OUTBOX_PUBLISHER.md](docs/MIGRATION_OUTBOX_PUBLISHER.md) for the
+  full migration path.
+
 ### 3.1.0
 - The outbox processor now prefers `IOutboxIntegrationPublisher` over the
   MassTransit-specific `IEventPublisher`, with a backward-compatible fallback. See
@@ -36,7 +52,7 @@ Entries are grouped by package below. Each package versions independently — se
 ### `IEventPublisher` fallback in the outbox processor
 - **Introduced in:** `eBuildingBlocks.Infrastructure` 3.1.0
 - **Deprecated in:** `eBuildingBlocks.Infrastructure` 3.1.0
-- **Removed in:** `eBuildingBlocks.Infrastructure` 4.0.0 (future major version, not yet scheduled)
+- **Removed in:** `eBuildingBlocks.Infrastructure` 4.0.0
 
 `OutboxProcessorBackgroundService` now resolves the broker-agnostic
 `eBuildingBlocks.Common.Outbox.IOutboxIntegrationPublisher` first. If only the
