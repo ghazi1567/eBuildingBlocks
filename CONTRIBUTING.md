@@ -36,7 +36,7 @@ Each top-level `eBuildingBlocks.*` folder is an independent NuGet package (see `
 - Nullable reference types are enabled — don't suppress warnings with `!` unless you've actually verified non-null.
 - Follow existing naming and folder conventions within each layer (see `ARCHITECTURAL_REVIEW.md` for the domain-event design rationale).
 - Domain events (`IDomainEvent`) are in-process/same-transaction; integration events (`IntegrationEvent`) are cross-service via MassTransit — don't conflate the two.
-- Breaking changes to public interfaces should be called out explicitly in the PR description and in `CHANGELOG.md`.
+- Breaking changes to public interfaces should be called out explicitly in the PR description and in `CHANGELOG.md`, with the affected package's `<Version>` bumped per [`docs/VERSIONING.md`](docs/VERSIONING.md).
 
 ## Reporting bugs / requesting features
 

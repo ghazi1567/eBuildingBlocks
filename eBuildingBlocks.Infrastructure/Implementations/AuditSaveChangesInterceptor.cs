@@ -41,7 +41,9 @@ namespace eBuildingBlocks.Infrastructure.Implementations
         {
             if (context == null) return;
 
-            var entries = context.ChangeTracker.Entries<AuditableEntity<Guid>>();
+            // IAuditableEntity (not AuditableEntity<Guid>) so entities keyed by int/long/string get
+            // stamped too — querying the closed generic silently skipped every other key type.
+            var entries = context.ChangeTracker.Entries<IAuditableEntity>();
 
             var now = DateTime.UtcNow;
             var user = GetCurrentUsername();

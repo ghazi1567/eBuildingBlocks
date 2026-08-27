@@ -71,6 +71,7 @@ eBuildingBlocks/
 ## 📚 Documentation
 
 - **[Examples & tutorials](docs/examples/README.md)** — guided walkthroughs for common scenarios.
+- **[Versioning & stability](docs/VERSIONING.md)** — SemVer policy per package, a compatibility matrix, and how breaking changes are communicated.
 - **[Hosting app: transactional outbox](docs/HOSTING_APP_OUTBOX.md)** — Wire `IEventTypeRegistry`, EF outbox interceptor, SQL Server outbox processor, and `IEventPublisher` in your host.
 - **[Repository & unit of work](docs/REPOSITORY_AND_UOW.md)** — `IUnitOfWork`, `AddDbContextUnitOfWork`, `IEfQueryableRepository`, and specification/queryable split.
 - **[Multi-tenancy](docs/MULTI_TENANCY.md)** — tenant isolation setup with `TenantEntity<TKey>` and global query filters.

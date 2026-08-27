@@ -7,13 +7,21 @@ using System.Linq.Expressions;
 
 namespace eBuildingBlocks.Infrastructure.Implementations;
 
+/// <summary>
+/// EF Core-backed repository. Composes <typeparamref name="TDbContext"/> directly rather than
+/// inheriting <see cref="UnitOfWork{TDbContext}"/> — a repository is not a unit of work, and IS-A
+/// inheritance previously put <c>SaveChangesAsync</c>/<c>BeginTransactionAsync</c>/<c>ExecuteSqlAsync</c>
+/// on the repository's public surface. Persist changes via <see cref="IUnitOfWork"/> instead
+/// (e.g. <see cref="DbContextUnitOfWork{TDbContext}"/>, registered separately via <c>AddDbContextUnitOfWork</c>).
+/// </summary>
 public class Repository<TEntity, TKey, TDbContext>(
      TDbContext dbContext
-    ) : UnitOfWork<TDbContext>(dbContext), IRepository<TEntity, TKey>, IEfQueryableRepository<TEntity, TKey>
+    ) : IRepository<TEntity, TKey>, IEfQueryableRepository<TEntity, TKey>
     where TEntity : class, IEntity where TDbContext : DbContext
 {
+    private DbSet<TEntity> Entities() => dbContext.Set<TEntity>();
 
-    public IQueryable<TEntity> Queryable => Entities<TEntity>().AsQueryable();
+    public IQueryable<TEntity> Queryable => Entities().AsQueryable();
     public virtual IQueryable<TEntity> GetQueryable => Queryable;
     public virtual IQueryable<TEntity> GetTrackedQueryable => Queryable;
     public virtual IQueryable<TEntity> ListQueryable => Queryable;
@@ -27,23 +35,23 @@ public class Repository<TEntity, TKey, TDbContext>(
     {
         get
         {
-            return Entities<TEntity>().AsNoTracking();
+            return Entities().AsNoTracking();
         }
     }
     public async Task AddAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        await Entities<TEntity>().AddAsync(entity, cancellationToken);
+        await Entities().AddAsync(entity, cancellationToken);
     }
 
     public Task UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        Entities<TEntity>().Update(entity);
+        Entities().Update(entity);
         return Task.CompletedTask;
     }
 
     public Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        Entities<TEntity>().Remove(entity);
+        Entities().Remove(entity);
         return Task.CompletedTask;
     }
 
@@ -52,35 +60,35 @@ public class Repository<TEntity, TKey, TDbContext>(
         // FindAsync ignores global query filters; use a filtered query for tenant-scoped entities.
         if (typeof(ITenantEntity).IsAssignableFrom(typeof(TEntity)))
         {
-            return await Entities<TEntity>()
+            return await Entities()
                 .FirstOrDefaultAsync(e => EF.Property<TKey>(e, "Id")!.Equals(id), ct);
         }
 
-        return await Entities<TEntity>().FindAsync([id!], ct);
+        return await Entities().FindAsync([id!], ct);
     }
 
 
     public virtual IQueryable<TEntity> Query() => SetAsNoTracking;
 
     public async Task<TEntity?> FirstOrDefaultAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
-        => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec, dbContext).FirstOrDefaultAsync(ct);
+        => await SpecificationEvaluator.GetQuery(Entities().AsQueryable(), spec, dbContext).FirstOrDefaultAsync(ct);
 
     public async Task<TEntity?> SingleOrDefaultAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
-       => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec, dbContext).SingleOrDefaultAsync(ct);
+       => await SpecificationEvaluator.GetQuery(Entities().AsQueryable(), spec, dbContext).SingleOrDefaultAsync(ct);
 
 
     public async Task<IReadOnlyList<TEntity>> ListAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
-      => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec, dbContext).ToListAsync(ct);
+      => await SpecificationEvaluator.GetQuery(Entities().AsQueryable(), spec, dbContext).ToListAsync(ct);
 
 
     public async Task<IReadOnlyList<TEntity>> ListAllAsync(CancellationToken ct = default)
-        => await Entities<TEntity>().AsNoTracking().ToListAsync(ct);
+        => await Entities().AsNoTracking().ToListAsync(ct);
 
     public async Task<int> CountAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
-       => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec, dbContext).CountAsync(ct);
+       => await SpecificationEvaluator.GetQuery(Entities().AsQueryable(), spec, dbContext).CountAsync(ct);
 
 
     public async Task<bool> AnyAsync(ISpecification<TEntity> spec, CancellationToken ct = default)
-     => await SpecificationEvaluator.GetQuery(Entities<TEntity>().AsQueryable(), spec, dbContext).AnyAsync(ct);
+     => await SpecificationEvaluator.GetQuery(Entities().AsQueryable(), spec, dbContext).AnyAsync(ct);
 
 }

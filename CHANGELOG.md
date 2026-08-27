@@ -5,6 +5,13 @@ Entries are grouped by package below. Each package versions independently — se
 
 ## eBuildingBlocks.Domain
 
+### 3.2.0
+- Added `eBuildingBlocks.Domain.Interfaces.IAuditableEntity` — a non-generic marker
+  (`CreatedOn`/`CreatedBy`/`ModifiedOn`/`ModifiedBy`, `SetCreated`/`SetModified`) now
+  implemented by `AuditableEntity<TKey>`. Purely additive; no existing member changed.
+  Added so infrastructure code can query audit-stamped entities regardless of their key
+  type — see the `eBuildingBlocks.Infrastructure` 5.0.0 entry below for why.
+
 ### 3.0.1
 - Removed the unused `ProjectReference` to `eBuildingBlocks.Common` (dead reference;
   no public API change).
@@ -25,6 +32,26 @@ Entries are grouped by package below. Each package versions independently — se
   consumers.
 
 ## eBuildingBlocks.Infrastructure
+
+### 5.0.0 — Breaking
+- Fixed: `AuditSaveChangesInterceptor` used to query
+  `ChangeTracker.Entries<AuditableEntity<Guid>>()`, so any entity keyed by `int`,
+  `long`, or `string` was silently never audit-stamped. It now queries the non-generic
+  `IAuditableEntity` (from `eBuildingBlocks.Domain` 3.2.0) instead, so all key types are
+  stamped. Not marked breaking on its own — this is a bugfix — but bundled into this
+  major version alongside the change below. If you depended on the old (buggy)
+  behavior of non-`Guid`-keyed entities never being stamped, that no longer holds.
+- **Breaking:** `Repository<TEntity, TKey, TDbContext>` no longer inherits
+  `UnitOfWork<TDbContext>`. It now composes the `DbContext` directly instead of
+  exposing it through an IS-A relationship that was never architecturally correct — a
+  repository is not a unit of work. `SaveChangesAsync`, `BeginTransactionAsync`,
+  `ExecuteSqlAsync`, and the generic `Entities<TEntity>()` helper are no longer public
+  members of `Repository<,,>`. Use `IUnitOfWork` (e.g. `DbContextUnitOfWork<TDbContext>`,
+  registered separately via `AddDbContextUnitOfWork`) for `SaveChangesAsync`, as the docs
+  already recommended. Nothing in this repository's own code (reference apps, docs
+  examples) called these members directly on a repository instance — only consumers who
+  cast a repository to its concrete `Repository<,,>` type and called these methods
+  directly are affected.
 
 ### 4.0.0 — Breaking
 - Removed the deprecated `IEventPublisher` fallback in the outbox processor
