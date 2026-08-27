@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "eBuildingBlocks contributors",
+  "classifications": ["Web", "WebAPI", "Clean Architecture", "DDD"],
+  "identity": "eBuildingBlocks.CleanArchitecture.ProjectTemplate",
+  "name": "eBuildingBlocks Clean Architecture API",
+  "shortName": "eblocks-api",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "eBlocksApi",
+  "preferNameDirectory": true
+}

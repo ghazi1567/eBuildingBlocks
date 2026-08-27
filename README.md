@@ -1,6 +1,54 @@
 # eBuildingBlocks
 
-A comprehensive .NET 9.0 building blocks framework providing enterprise-grade infrastructure, patterns, and utilities for building scalable, maintainable, and robust applications.
+[![CI](https://github.com/ghazi1567/eBuildingBlocks/actions/workflows/ci.yml/badge.svg?branch=latest-dotnet-10)](https://github.com/ghazi1567/eBuildingBlocks/actions/workflows/ci.yml)
+[![NuGet](https://img.shields.io/nuget/v/eBuildingBlocks.Domain.svg)](https://www.nuget.org/packages/eBuildingBlocks.Domain)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/)
+
+A comprehensive .NET 10.0 building blocks framework providing enterprise-grade infrastructure, patterns, and utilities for building scalable, maintainable, and robust applications.
+
+## Why eBuildingBlocks?
+
+Every team building a new .NET service ends up hand-rolling the same plumbing: a generic repository + unit of work, an audit trail interceptor, multi-tenant query filters, a standardized API response envelope, a transactional outbox for reliable event publishing, global exception handling, API versioning, health checks... `eBuildingBlocks` packages that plumbing as small, independently-versioned NuGet packages so you can pull in only the layers you need instead of rewriting them per project.
+
+It's not a replacement for MediatR, MassTransit, or EF Core — it's the glue and conventions that sit on top of them (in fact it integrates with MassTransit and EF Core directly) so a new service starts from "wire up DI" instead of "design the repository pattern from scratch."
+
+## Quickstart
+
+**Option A — scaffold a working project in one command:**
+
+```bash
+dotnet new install eBuildingBlocks.Templates
+dotnet new eblocks-api -n MyService
+cd MyService
+dotnet run --project MyService.API
+```
+
+This generates a complete Domain/Application/Infrastructure/API solution with a sample entity, repository, controller, and audit logging already wired up, running on an EF Core in-memory database — no external services required to try it. See [`templates/`](templates) for details.
+
+**Option B — add packages to an existing project:**
+
+```bash
+dotnet new webapi -n MyService
+cd MyService
+dotnet add package eBuildingBlocks.Domain
+dotnet add package eBuildingBlocks.Application
+dotnet add package eBuildingBlocks.Infrastructure
+dotnet add package eBuildingBlocks.API
+```
+
+```csharp
+// Program.cs
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.BaseRegister(builder.Configuration, builder.Host);
+
+var app = builder.Build();
+app.BaseAppUse(builder.Configuration);
+app.Run();
+```
+
+That wires up API versioning, Scalar/OpenAPI, JWT auth, health checks, and Hangfire. See [`eBuildingBlocks.ReferenceApp.API`](eBuildingBlocks.ReferenceApp.API) for a complete working example, or [`docs/examples`](docs/examples) for guided walkthroughs (multi-tenancy, the transactional outbox, repository/UoW).
 
 ## 🏗️ Project Overview
 
@@ -22,9 +70,12 @@ eBuildingBlocks/
 
 ## 📚 Documentation
 
+- **[Examples & tutorials](docs/examples/README.md)** — guided walkthroughs for common scenarios.
 - **[Hosting app: transactional outbox](docs/HOSTING_APP_OUTBOX.md)** — Wire `IEventTypeRegistry`, EF outbox interceptor, SQL Server outbox processor, and `IEventPublisher` in your host.
 - **[Repository & unit of work](docs/REPOSITORY_AND_UOW.md)** — `IUnitOfWork`, `AddDbContextUnitOfWork`, `IEfQueryableRepository`, and specification/queryable split.
+- **[Multi-tenancy](docs/MULTI_TENANCY.md)** — tenant isolation setup with `TenantEntity<TKey>` and global query filters.
 - **[Migration: Outbox publisher resolution](docs/MIGRATION_OUTBOX_PUBLISHER.md)** — the outbox processor now prefers the broker-agnostic `IOutboxIntegrationPublisher` over the MassTransit-specific `IEventPublisher`; no action needed for existing `AddIntegrationMassTransit` consumers.
+- **[Contributing](CONTRIBUTING.md)** — local setup, PR conventions, coding guidelines.
 
 **Breaking changes (recent):** `FeatureGate` / `MultiTenancyOptions` live in namespace `eBuildingBlocks.Common.Features` (not `eBuildingBlocks.API.Features`). `IRepository` no longer includes `SaveChangesAsync` — use `IUnitOfWork` (see doc above).
 
@@ -71,7 +122,7 @@ eBuildingBlocks/
 - **Identity Integration**: ASP.NET Core Identity support
 
 #### Key Components:
-- `DefaultDBContext`: Base DbContext with audit support
+- `TenantAwareDbContext`: Base DbContext that applies tenant query filters and indexes
 - `Repository<TEntity, TKey, TDbContext>`: Generic repository implementation
 - `InProcessEventBus`: In-process domain event bus implementation
 - `AuditSaveChangesInterceptor`: Automatic audit logging
@@ -148,7 +199,7 @@ eBuildingBlocks/
 ## 📦 Dependencies
 
 ### **Core Dependencies**
-- **.NET 9.0**: Latest .NET framework
+- **.NET 10.0**: Latest .NET framework
 - **Entity Framework Core**: ORM and data access
 - **FluentValidation**: Input validation
 - **AutoMapper**: Object mapping
@@ -179,8 +230,9 @@ services.AddDbContext<YourDbContext>(options =>
 
 ### **2. Repository Registration**
 ```csharp
-// Register repositories
-services.AddScoped(typeof(IRepository<,>), typeof(Repository<,,>));
+// Repository<TEntity,TKey,TDbContext> has three type parameters but IRepository<TEntity,TKey> only two,
+// so register per-entity rather than as an open generic:
+services.AddScoped<IRepository<Product, Guid>, Repository<Product, Guid, YourDbContext>>();
 ```
 
 ### **3. API Configuration**
@@ -222,7 +274,7 @@ services.AddMassTransit(x =>
 
 ### **Creating an Entity**
 ```csharp
-public class User : BaseEntity
+public class User : AuditableEntity<Guid>
 {
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
@@ -242,7 +294,7 @@ public class UserService
     
          public async Task<IReadOnlyList<User>> GetUsersAsync()
      {
-         return await _userRepository.GetAllAsync();
+         return await _userRepository.ListAllAsync();
      }
 }
 ```
@@ -353,18 +405,13 @@ The framework is designed to be easily testable with:
 
 ## 🤝 Contributing
 
+Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and submit a PR.
+
 ### **Extension Points**
 1. **Custom Repositories**: Implement `IRepository<TEntity, TKey>` for specialized data access
 2. **Custom Events**: Extend `IntegrationEvent` for domain events
 3. **Custom Middleware**: Extend existing middleware or create new ones
 4. **Custom Validators**: Use FluentValidation for custom validation rules
-
-### **Guidelines**
-- Follow the existing naming conventions
-- Maintain clean architecture principles
-- Add comprehensive unit tests
-- Update documentation for new features
-- Follow the established exception handling patterns
 
 ## 📄 License
 

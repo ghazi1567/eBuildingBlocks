@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageType>Template</PackageType>
+    <PackageId>eBuildingBlocks.Templates</PackageId>
+    <Title>eBuildingBlocks Project Templates</Title>
+    <Authors>Inam Ul Haq</Authors>
+    <Description>dotnet new templates for scaffolding eBuildingBlocks-based projects. Run `dotnet new eblocks-api` after installing to generate a working Clean Architecture Web API in one command.</Description>
+    <PackageTags>dotnet-new;templates;eBuildingBlocks;clean-architecture</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ghazi1567/eBuildingBlocks</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ghazi1567/eBuildingBlocks</RepositoryUrl>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <TargetsForTfmSpecificContentInPackage/>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="content\**\*" Exclude="content\**\bin\**;content\**\obj\**" />
+    <Compile Remove="**\*.cs" />
+  </ItemGroup>
+
+</Project>
