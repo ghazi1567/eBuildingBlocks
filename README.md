@@ -13,6 +13,25 @@ Every team building a new .NET service ends up hand-rolling the same plumbing: a
 
 It's not a replacement for MediatR, MassTransit, or EF Core — it's the glue and conventions that sit on top of them (in fact it integrates with MassTransit and EF Core directly) so a new service starts from "wire up DI" instead of "design the repository pattern from scratch."
 
+## How this compares to the alternatives
+
+You're probably also looking at one of these. Here's the honest difference — pick based on which tradeoff fits your team, not on which list is longer:
+
+| | eBuildingBlocks | Ardalis.CleanArchitecture | Jason Taylor's Clean Architecture Template | ABP Framework |
+|---|---|---|---|---|
+| **You get it as** | A NuGet dependency you version and upgrade | A `dotnet new` scaffold you fork and own from day one | Same — a scaffold you fork and own | NuGet packages plus an application/module framework |
+| **Upgrading later** | `dotnet add package` to a newer version, changes tracked in a changelog per package | Nothing to upgrade — it's your code now; you manually port improvements if you want them | Same | Package bumps, with framework-provided migration tooling for bigger jumps |
+| **Core scope** | Repository/UoW, audit logging, multi-tenancy, domain + integration events, transactional outbox, API scaffolding (versioning, health checks, Hangfire) | Repository/UoW, MediatR-based CQRS, Specification pattern, minimal API surface | Repository/UoW, MediatR-based CQRS, EF Core, ASP.NET Identity, background jobs, Angular/React SPA scaffolding | All of the above and more: dynamic API generation, permission system, admin UI, plugin/module architecture |
+| **Multi-tenancy** | Built in (tenant resolution + automatic EF query filters) | Not included | Not included | Built in — this is ABP's signature feature, more mature and deeper than ours |
+| **Admin UI / plugin system** | None — this is a library, not an application | None | None | Yes — a major part of the value, with some modules commercial |
+| **License** | MIT, every package | MIT | MIT | MIT core; some modules are commercial |
+
+**Pick eBuildingBlocks if:** you want the repeated plumbing (repository, audit, multi-tenancy, outbox) as something you `dotnet add package` and upgrade, not something you copy once and then own the drift on forever, and you don't need ABP's admin UI or module system.
+
+**Pick a template (Ardalis / Jason Taylor) if:** you want full, immediate ownership of every line from the start, or need the SPA scaffolding Jason Taylor's template includes.
+
+**Pick ABP if:** you need the admin UI, plugin ecosystem, or dynamic API generation, and the larger surface area and (partial) commercial licensing are acceptable for your project.
+
 ## Quickstart
 
 **Option A — scaffold a working project in one command:**
