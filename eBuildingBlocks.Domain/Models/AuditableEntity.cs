@@ -4,13 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using eBuildingBlocks.Domain.Interfaces;
+
 namespace eBuildingBlocks.Domain.Models
 {
     /// <summary>
     /// Adds audit fields on top of <see cref="BaseEntity{TKey}"/>.
     /// Stamp these in your DbContext (CreatedOn/By on Add; ModifiedOn/By on Update).
     /// </summary>
-    public abstract class AuditableEntity<TKey> : BaseEntity<TKey>
+    public abstract class AuditableEntity<TKey> : BaseEntity<TKey>, IAuditableEntity
         where TKey : IEquatable<TKey>
     {
         /// <summary>UTC timestamp when the entity was created.</summary>

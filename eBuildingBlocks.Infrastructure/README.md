@@ -55,14 +55,10 @@ public class ApplicationDbContext : DbContext
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
     }
-    
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-        
-        // Apply audit configuration
-        modelBuilder.ApplyAuditConfiguration();
-    }
+
+    // Audit stamping (AuditSaveChangesInterceptor) needs no model configuration — it runs at
+    // SaveChanges time via ChangeTracker. If your entities are tenant-scoped, derive from
+    // TenantAwareDbContext instead of DbContext; it applies tenant query filters for you.
 }
 ```
 
@@ -72,11 +68,17 @@ public class ApplicationDbContext : DbContext
 using eBuildingBlocks.Infrastructure.Extensions;
 using eBuildingBlocks.Infrastructure.Implementations;
 
-services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+services.AddScoped<AuditSaveChangesInterceptor>();
+
+services.AddDbContext<ApplicationDbContext>((sp, options) =>
+    options.UseSqlServer(connectionString)
+        .AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>()));
 
 services.AddDbContextUnitOfWork<ApplicationDbContext>();
-services.AddScoped(typeof(IRepository<,>), typeof(Repository<,,>));
+
+// Repository<TEntity,TKey,TDbContext> has three type parameters but IRepository<TEntity,TKey>
+// only two, so register per-entity rather than as an open generic:
+services.AddScoped<IRepository<Product, Guid>, Repository<Product, Guid, ApplicationDbContext>>();
 ```
 
 ### 3. Use Repository Pattern
@@ -175,33 +177,29 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
 
 ### Model Builder Extensions
 
-Entity Framework Core configuration utilities:
+The real `ModelBuilderExtensions` (`eBuildingBlocks.Infrastructure.Extensions`) — for multi-tenant
+entities (`ITenantEntity` / `TenantEntity<TKey>`):
 
 ```csharp
 public static class ModelBuilderExtensions
 {
-    public static void ApplyAuditConfiguration(this ModelBuilder modelBuilder)
-    {
-        // Configure audit properties
-        modelBuilder.Entity<BaseEntity>(entity =>
-        {
-            entity.Property(e => e.CreatedAt).IsRequired();
-            entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
-            entity.Property(e => e.DeletedBy).HasMaxLength(100);
-        });
-        
-        // Configure soft delete filter
-        modelBuilder.Entity<BaseEntity>().HasQueryFilter(e => !e.IsDeleted);
-    }
-    
-    public static void ApplyTenantConfiguration(this ModelBuilder modelBuilder)
-    {
-        // Configure tenant filtering
-        modelBuilder.Entity<BaseEntity>().HasIndex(e => e.TenantId);
-    }
+    // Applies HasQueryFilter so each ITenantEntity row is restricted to ICurrentUser.TenantId.
+    // Called automatically by TenantAwareDbContext.OnModelCreating — you don't need to call it
+    // yourself if you derive from that base class.
+    public static void ApplyRuntimeTenantQueryFilters(this ModelBuilder modelBuilder, ICurrentUser currentUser);
+
+    // Adds an index on TenantId for all tenant-scoped entity types. Also called automatically
+    // by TenantAwareDbContext.
+    public static void ApplyTenantEntityIndexes(this ModelBuilder modelBuilder);
 }
 ```
+
+Audit stamping doesn't need model configuration at all — `AuditSaveChangesInterceptor` stamps
+`CreatedOn`/`CreatedBy`/`ModifiedOn`/`ModifiedBy` at `SaveChanges` time via `ChangeTracker`, for any
+entity implementing `IAuditableEntity` (which `AuditableEntity<TKey>` already does). If you also want
+the `AuditLog` row-change trail written to the database, add `DbSet<AuditLog> AuditLogs => Set<AuditLog>();`
+to your `DbContext` and configure a key for it (`AuditLog` doesn't declare one) — e.g. in
+`OnModelCreating`: `modelBuilder.Entity<AuditLog>().Property<int>("Id").ValueGeneratedOnAdd(); modelBuilder.Entity<AuditLog>().HasKey("Id");`.
 
 ## Project Structure
 
@@ -321,21 +319,22 @@ public static class InfrastructureExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddScoped<AuditSaveChangesInterceptor>();
+
         // Add DbContext
-        services.AddDbContext<ApplicationDbContext>(options =>
+        services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
-            options.AddInterceptors(new AuditSaveChangesInterceptor());
+            options.AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>());
         });
-        
-        // Register repositories
-        services.AddScoped(typeof(IRepository<,>), typeof(Repository<,,>));
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
-        
-        // Register specific repositories
-        services.AddScoped<IProductRepository, ProductRepository>();
-        services.AddScoped<IOrderRepository, OrderRepository>();
-        
+
+        services.AddDbContextUnitOfWork<ApplicationDbContext>();
+
+        // Register repositories per entity — Repository<TEntity,TKey,TDbContext> has three type
+        // parameters but IRepository<TEntity,TKey> only two, so it can't be registered as an open generic.
+        services.AddScoped<IRepository<Product, Guid>, Repository<Product, Guid, ApplicationDbContext>>();
+        services.AddScoped<IRepository<Order, Guid>, Repository<Order, Guid, ApplicationDbContext>>();
+
         return services;
     }
 }
@@ -424,27 +423,24 @@ public static class InfrastructureExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddScoped<AuditSaveChangesInterceptor>();
+
         // Database
-        services.AddDbContext<ApplicationDbContext>(options =>
+        services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
-            
-            // Add audit interceptor
-            if (configuration.GetValue<bool>("Audit:Enabled"))
-            {
-                options.AddInterceptors(new AuditSaveChangesInterceptor());
-            }
+            options.AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>());
         });
-        
+
         // Identity
         services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
-        
-        // Repositories
-        services.AddScoped(typeof(IRepository<,>), typeof(Repository<,,>));
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
-        
+
+        // Repositories — registered per entity (see note above on why this can't be an open generic).
+        services.AddDbContextUnitOfWork<ApplicationDbContext>();
+        services.AddScoped<IRepository<Product, Guid>, Repository<Product, Guid, ApplicationDbContext>>();
+
         return services;
     }
 }

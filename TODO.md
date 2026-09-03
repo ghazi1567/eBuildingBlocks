@@ -30,7 +30,7 @@
 
 ---
 
-### P-2 — Fix `AuditSaveChangesInterceptor` hardcoded to `AuditableEntity<Guid>`
+### P-2 — Fix `AuditSaveChangesInterceptor` hardcoded to `AuditableEntity<Guid>` — done
 **Priority:** High  
 **Layer:** `eBuildingBlocks.Infrastructure`  
 **File:** `Infrastructure/Implementations/AuditSaveChangesInterceptor.cs`
@@ -39,14 +39,16 @@
 
 **Fix:** Change the query to `Entries()` filtered by a non-generic base check (e.g., `e.Entity is AuditableEntity<Guid>` runtime check, or introduce a non-generic `IAuditableEntity` marker interface and use `Entries<IAuditableEntity>()`).
 
-- [ ] Introduce `IAuditableEntity` non-generic marker interface with `SetCreated` / `SetModified` methods
-- [ ] Implement `IAuditableEntity` on `AuditableEntity<TKey>`
-- [ ] Change `ApplyAudit` to query `Entries<IAuditableEntity>()` (or equivalent)
-- [ ] Verify audit stamping works for `int`, `long`, and `string` keyed entities
+- [x] Introduce `IAuditableEntity` non-generic marker interface with `SetCreated` / `SetModified` methods
+- [x] Implement `IAuditableEntity` on `AuditableEntity<TKey>`
+- [x] Change `ApplyAudit` to query `Entries<IAuditableEntity>()` (or equivalent)
+- [x] Verify audit stamping works for `int`, `long`, and `string` keyed entities — see `eBuildingBlocks.Infrastructure.Tests/Auditing/AuditSaveChangesInterceptorTests.cs` (also covers `Guid`, and modify-vs-add)
+
+Shipped in `eBuildingBlocks.Domain` 3.2.0 (additive) and `eBuildingBlocks.Infrastructure` 5.0.0. See `CHANGELOG.md`.
 
 ---
 
-### P-3 — Break `Repository<>` IS-A `UnitOfWork<>` inheritance
+### P-3 — Break `Repository<>` IS-A `UnitOfWork<>` inheritance — done
 **Priority:** High  
 **Layer:** `eBuildingBlocks.Infrastructure`  
 **File:** `Infrastructure/Implementations/Repository.cs`, `Infrastructure/Implementations/UnitOfWork.cs`
@@ -55,11 +57,17 @@
 
 **Fix:** Change to composition. Inject `TDbContext` directly into `Repository` (it already receives it) and remove the base class. Expose only `DbSet<TEntity>` access via a private helper.
 
-- [ ] Remove `: UnitOfWork<TDbContext>` from `Repository<TEntity, TKey, TDbContext>`
-- [ ] Store `TDbContext` as a private field in `Repository`
-- [ ] Move `Entities<TEntity>()` helper to a private method in `Repository`
-- [ ] Ensure `IUnitOfWork` is still separately registered (it is, via `DbContextUnitOfWork`)
-- [ ] Verify no public API surface is broken for existing consumers
+- [x] Remove `: UnitOfWork<TDbContext>` from `Repository<TEntity, TKey, TDbContext>`
+- [x] Store `TDbContext` as a private field in `Repository` (primary-constructor parameter, captured)
+- [x] Move `Entities<TEntity>()` helper to a private method in `Repository`
+- [x] Ensure `IUnitOfWork` is still separately registered (it is, via `DbContextUnitOfWork`)
+- [x] Verify no public API surface is broken for existing consumers — audited: no code in this repo
+      (reference apps, docs, templates) called `SaveChangesAsync`/`BeginTransactionAsync`/
+      `ExecuteSqlAsync`/`Entities<T>()` on a repository instance. External consumers doing so are
+      breaking — this is documented as a breaking change in `CHANGELOG.md` (Infrastructure 5.0.0).
+      Regression coverage: `eBuildingBlocks.Infrastructure.Tests/Repositories/RepositoryCompositionTests.cs`.
+
+Shipped in `eBuildingBlocks.Infrastructure` 5.0.0 (breaking — see `CHANGELOG.md` and `docs/VERSIONING.md`).
 
 ---
 
