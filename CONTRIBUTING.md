@@ -31,6 +31,8 @@ Each top-level `eBuildingBlocks.*` folder is an independent NuGet package (see `
 5. Make sure `dotnet build` and `dotnet test` pass locally before opening the PR — CI runs the same commands and will block merge on failure.
 6. Open the PR against `latest-dotnet-10` and describe *why* the change is needed, not just what changed.
 
+CI also collects code coverage (via coverlet) and posts a per-package summary to the workflow run's job summary, with the full report attached as a build artifact (`coverage-report`) — check there if you want to see what a PR did or didn't cover. There's no live coverage badge on the README yet; that needs a Codecov (or similar) account wired up, which is tracked as follow-up work rather than something CI can produce standalone.
+
 ## Coding conventions
 
 - Nullable reference types are enabled — don't suppress warnings with `!` unless you've actually verified non-null.
